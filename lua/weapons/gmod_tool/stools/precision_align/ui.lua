@@ -1518,11 +1518,9 @@ vgui.Register("PA_Tool_Plane_Panel", TOOL_PLANE_PANEL, "DPanel")
 
 local TOOL_LIST = {}
 function TOOL_LIST:Init()
-	self:SetSize( CPanel_Width, 153 )
-
 	self.list_tooltype = vgui.Create("DListView", self)
 		self.list_tooltype:SetPos(0, 0)
-		self.list_tooltype:SetSize(CPanel_Width, 153)
+		self.list_tooltype:Dock(FILL)
 		self.list_tooltype:SetTooltip( "Select left-click function" )
 		self.list_tooltype:SetHeaderHeight( 0 )
 		self.list_tooltype:SetSortable(false)
@@ -1543,7 +1541,7 @@ function TOOL_LIST:Init()
 		self.list_tooltype.OnRowSelected = function(_, line)
 			RunConsoleCommand( PA_ .. "tooltype", tostring(line) )
 		end
-
+	self:SetSize(CPanel_Width, #self.list_tooltype:GetLines() * 17)
 	-- Draw coloured tool option backgrounds
 	for i = 1, 9 do
 		local line = self.list_tooltype:GetLine(i)
