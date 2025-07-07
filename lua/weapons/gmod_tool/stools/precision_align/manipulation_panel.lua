@@ -1899,11 +1899,13 @@ function FUNCTIONS_TAB:Init()
 		self.text_background:SetPos( width * 4 + 10, 20 )
 		self.text_background:SetSize( width * 2 - 19, self:GetTall() / 2  - 45 )
 
+	local textColor = self:GetSkin().Colours.Label.Dark
+
 	self.text_title = vgui.Create( "DLabel", self )
 		self.text_title:SetPos( width * 4 + 15, 25 )
 		self.text_title:SetWide( width * 2 - 29 )
 		self.text_title:SetContentAlignment(7)
-		self.text_title:SetTextColor( Color(20, 20, 20, 255) )
+		self.text_title:SetTextColor(textColor)
 		self.text_title:SetText("- Select a function -")
 
 	self.text_description = vgui.Create( "DLabel", self )
@@ -1911,7 +1913,7 @@ function FUNCTIONS_TAB:Init()
 		self.text_description:SetSize( width * 2 - 29, self:GetTall() / 2  - 78 )
 		self.text_description:SetWrap( true )
 		self.text_description:SetContentAlignment(7)
-		self.text_description:SetTextColor( Color(20, 20, 20, 255) )
+		self.text_description:SetTextColor(textColor)
 		self.text_description:SetText("")
 
 
@@ -2762,11 +2764,13 @@ function ROTATION_FUNCTIONS_TAB:Init()
 		self.text_background:SetPos( width * 4 + 10, 20 )
 		self.text_background:SetSize( width * 2 - 19, self:GetTall() / 2  - 45 )
 
+	local textColor = self:GetSkin().Colours.Label.Dark
+
 	self.text_title = vgui.Create( "DLabel", self )
 		self.text_title:SetPos( width * 4 + 15, 25 )
 		self.text_title:SetWide( width * 2 - 29 )
 		self.text_title:SetContentAlignment(7)
-		self.text_title:SetTextColor( Color(20, 20, 20, 255) )
+		self.text_title:SetTextColor(textColor)
 		self.text_title:SetText("- Select a function -")
 
 	self.text_description = vgui.Create( "DLabel", self )
@@ -2774,7 +2778,7 @@ function ROTATION_FUNCTIONS_TAB:Init()
 		self.text_description:SetSize( width * 2 - 29, self:GetTall() / 2  - 78 )
 		self.text_description:SetWrap( true )
 		self.text_description:SetContentAlignment(7)
-		self.text_description:SetTextColor( Color(20, 20, 20, 255) )
+		self.text_description:SetTextColor(textColor)
 		self.text_description:SetText("")
 
 
@@ -3035,7 +3039,7 @@ function CONSTRAINTS_TAB:Init()
 		self.text_description:SetSize( 195, 284 )
 		self.text_description:SetWrap( true )
 		self.text_description:SetContentAlignment(7)
-		self.text_description:SetTextColor( Color(20, 20, 20, 255) )
+		self.text_description:SetTextColor(self:GetSkin().Colours.Label.Dark)
 	self:UpdateText()
 
 	self.button_constraint = vgui.Create( "PA_Function_Button", self )

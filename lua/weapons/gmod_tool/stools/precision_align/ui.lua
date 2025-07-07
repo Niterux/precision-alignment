@@ -1521,7 +1521,7 @@ function TOOL_LIST:Init()
 	self.list_tooltype = vgui.Create("DListView", self)
 		self.list_tooltype:SetPos(0, 0)
 		self.list_tooltype:Dock(FILL)
-		self.list_tooltype:SetTooltip( "Select left-click function" )
+		self.list_tooltype:SetTooltip("Select left-click function")
 		self.list_tooltype:SetHeaderHeight( 0 )
 		self.list_tooltype:SetSortable(false)
 		self.list_tooltype:SetMultiSelect(false)
@@ -1541,42 +1541,42 @@ function TOOL_LIST:Init()
 		self.list_tooltype.OnRowSelected = function(_, line)
 			RunConsoleCommand( PA_ .. "tooltype", tostring(line) )
 		end
+
 	self:SetSize(CPanel_Width, #self.list_tooltype:GetLines() * 17)
-	-- Draw coloured tool option backgrounds
-	for i = 1, 9 do
-		local line = self.list_tooltype:GetLine(i)
-		local height = line:GetTall()
-		local DrawColourOutline
-
-		if i < 5 then
-			DrawColourOutline = table.Copy(BGColor_Point)
-		elseif i < 8 then
-			DrawColourOutline = table.Copy(BGColor_Line)
-		else
-			DrawColourOutline = table.Copy(BGColor_Plane)
-		end
-
-		local DrawColour = DrawColourOutline
-
-		line.Paint = function()
-			if line:IsSelected() then
-				DrawColour.a = 150
-			else
-				DrawColour.a = 200
-			end
-			surface.SetDrawColor( DrawColour )
-			surface.DrawRect( 0, 0, CPanel_Width, height - 7 )
-
-			surface.SetDrawColor( DrawColourOutline )
-			surface.DrawOutlinedRect(0, 0, CPanel_Width - 2, height-7)
-		end
-
-		line.Columns[1]:SetTextColor( color_black )
-		line.Columns[1].UpdateColours = function() end
-	end
 end
 
 function TOOL_LIST:Paint()
+	local width = self:GetWide()
+
+	-- Draw colored tool option backgrounds
+	for i = 1, 9 do
+		local line = self.list_tooltype:GetLine(i)
+		local height = line:GetTall()
+		local DrawColorOutline
+
+		if i < 5 then
+			DrawColorOutline = table.Copy(BGColor_Point)
+		elseif i < 8 then
+			DrawColorOutline = table.Copy(BGColor_Line)
+		else
+			DrawColorOutline = table.Copy(BGColor_Plane)
+		end
+
+		local DrawColor = DrawColorOutline
+
+		line.Paint = function()
+			if line:IsSelected() then
+				DrawColor.a = 150
+			else
+				DrawColor.a = 200
+			end
+			surface.SetDrawColor(DrawColor)
+			surface.DrawRect(0, 0, width, height)
+
+			surface.SetDrawColor(DrawColorOutline)
+			surface.DrawOutlinedRect(0, 0, width - 2, height)
+		end
+	end
 end
 
 vgui.Register("PA_CPanel_tool_list", TOOL_LIST, "DPanel")

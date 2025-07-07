@@ -406,7 +406,7 @@ local BGColor_Line = Color(140, 140, 170, 255)
 local BGColor_Plane = Color(140, 170, 140, 255)
 
 -- surface.CreateFont( "HUDNumber", {60, 400, true, false, "PAToolScreen_Title"} )
-surface.CreateFont("PAToolScreen_Title", {font = "HudNumbers", size = 60, weight = 400, antialias = true, additive = false})
+surface.CreateFont("PAToolScreen_Title", {font = "Verdana", size = 60, weight = 400, antialias = true, additive = false})
 -- surface.CreateFont( "TabLarge",{ 70, 400, true, false, "PAToolScreen_ToolType"} )
 surface.CreateFont("PAToolScreen_ToolType", {font = "Verdana", size = 70, weight = 400, antialias = true, additive = false})
 -- surface.CreateFont( "TabLarge",{ 29, 400, true, false, "PAToolScreen_ToolDesc"} )
