@@ -245,17 +245,17 @@ local function Nearest_Edge( HitPosL, BoxMin, BoxMax, BoxCentre, Snap_Dist )
 	return EdgePosL, Snapped_Edges
 end
 
-function TOOL:GetClickPosition( trace )
+function TOOL:GetClickPosition(trace)
 	local Pos
 	local Ent = trace.Entity
-	local Phys = Ent:GetPhysicsObjectNum( trace.PhysicsBone )
-	local Edge_Snap = self:GetClientNumber( "edge_snap" ) ~= 0
-	local Centre_Snap = self:GetClientNumber( "centre_snap" ) ~= 0
-	local Snap_Dist = math.max(0, self:GetClientNumber( "snap_distance" ))
+	local Phys = Ent:GetPhysicsObjectNum(trace.PhysicsBone)
+	local Edge_Snap = self:GetClientNumber("edge_snap") ~= 0
+	local Centre_Snap = self:GetClientNumber("centre_snap") ~= 0
+	local Snap_Dist = math.max(0, self:GetClientNumber("snap_distance"))
 
-	local tooltype = self:GetClientNumber( "tooltype" )
+	local tooltype = self:GetClientNumber("tooltype")
 
-	if ( not Phys or not Ent or Ent:IsWorld() ) then
+	if not IsValid(Phys) or not IsValid(Ent) or Ent:IsWorld() then
 		Pos = trace.HitPos
 
 	-- Coordinate Centre
