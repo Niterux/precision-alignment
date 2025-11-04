@@ -392,10 +392,6 @@ if SERVER then return end
 
 local BGColor            = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR
 local BGColor_Background = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_BACKGROUND
-local BGColor_Display    = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_DISPLAY
-local BGColor_Point      = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_POINT
-local BGColor_Line       = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_LINE
-local BGColor_Plane      = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_PLANE
 
 -- surface.CreateFont( "HUDNumber", {60, 400, true, false, "PAToolScreen_Title"} )
 surface.CreateFont("PAToolScreen_Title", {font = "Verdana", size = 60, weight = 400, antialias = true, additive = false})

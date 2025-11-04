@@ -1,1 +1,1 @@
-local MODE = PrecisionAlign.ToolMode(PrecisionAlign.CONSTRUCT_PLANE, "Hitnormal", 3010)
+local _ = PrecisionAlign.ToolMode(PrecisionAlign.CONSTRUCT_PLANE, "Hitnormal", 3010)
