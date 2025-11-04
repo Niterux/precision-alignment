@@ -1,6 +1,5 @@
 -- Precision Alignment math functions library - By Wenli
-local PA = "precision_align"
-local PA_ = PA .. "_"
+local PA_ = PrecisionAlign.PA_
 
 PrecisionAlign = PrecisionAlign or {}
 PrecisionAlign.Functions = PrecisionAlign.Functions or {}
@@ -29,8 +28,6 @@ for i = 1, 9 do
 	PrecisionAlign.Planes[i] = {visible = true}
 end
 
-local showMsgsCvar = CreateClientConVar(PA_ .. "display_messages", "0", true, false, _, 0, 1)
-local showWarnsCvar = CreateClientConVar(PA_ .. "display_warnings", "1", true, false, _, 0, 1)
 local stackCvar = CreateClientConVar(PA_ .. "stack_num", "1", true, false, _, 1, 20)
 local lengthCvar = CreateClientConVar(PA_ .. "default_linelength", "200", true, false, _, 0.001)
 
@@ -38,17 +35,8 @@ local lengthCvar = CreateClientConVar(PA_ .. "default_linelength", "200", true, 
 -- Global  Functions
 --********************************************************************************************************************--
 
-local function Message( text )
-	if showMsgsCvar:GetInt() == 1 then
-		LocalPlayer():ChatPrint("(PA) " .. text)
-	end
-end
-
-local function Warning( text )
-	if showWarnsCvar:GetInt() == 1 then
-		LocalPlayer():ChatPrint("(PA) ERROR: " .. text)
-	end
-end
+local Message = function(Text) PrecisionAlign.Message(Text) end
+local Warning = function(Text) PrecisionAlign.Warning(Text) end
 
 -- Set view in direction of world position vector v
 PrecisionAlign.Functions.set_playerview = function( v )

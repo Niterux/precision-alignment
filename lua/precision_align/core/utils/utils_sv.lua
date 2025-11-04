@@ -1,8 +1,7 @@
 -- Precision Alignment serverside code - By Wenli
 if CLIENT then return end
 
-local PA = "precision_align"
-local PA_ = PA .. "_"
+local PA, PA_ = PrecisionAlign.PA, PrecisionAlign.PA_
 
 util.AddNetworkString( PA_ .. "constraint" )
 util.AddNetworkString( PA_ .. "click" )
