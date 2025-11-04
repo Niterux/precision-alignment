@@ -21,7 +21,7 @@ local function EnqueueMessage(Text, Type, Time)
     Panel:SetType(Type)
     Panel:SetDeathTime(RealTime() + (Time or 0))
     if PrecisionAlign.MessageQueue:Length() > 6 then
-        PrecisionAlign.MessageQueue:Peek():SetDeathTime(RealTime() + 0.5)
+        PrecisionAlign.MessageQueue:Dequeue():Remove()
     end
     PrecisionAlign.MessageQueue:Enqueue(Panel)
 end
@@ -75,7 +75,7 @@ function PA_NotifyPanel:Paint(W, H)
     )
 
     DPanel.Paint(self, W, H)
-    draw.SimpleText(self.Text, "DermaDefault", (W / 2) + (H / 2), H / 2, color_black, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    draw.SimpleText(self.Text, "DermaDefault", (W / 2) + (H / 2), H / 2, self:GetSkin().Colours.Label.Dark, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     surface.SetMaterial(self.Icon)
     surface.DrawTexturedRect(2 + 4, 2, H - 4, H - 4)
     surface.SetAlphaMultiplier(M)
