@@ -1,1 +1,1 @@
-local MODE = PrecisionAlign.ToolMode("Point - Hitpos", 1000)
+local MODE = PrecisionAlign.ToolMode(PrecisionAlign.CONSTRUCT_POINT, "Hitpos", 1000)

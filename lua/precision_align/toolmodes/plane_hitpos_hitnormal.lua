@@ -1,1 +1,1 @@
-local MODE = PrecisionAlign.ToolMode("Plane - Hitpos + Hitnormal", 3000)
+local MODE = PrecisionAlign.ToolMode(PrecisionAlign.CONSTRUCT_PLANE, "Hitpos + Hitnormal", 3000)

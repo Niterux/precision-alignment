@@ -1514,22 +1514,24 @@ vgui.Register("PA_Tool_Plane_Panel", TOOL_PLANE_PANEL, "DPanel")
 local TOOL_LIST = {}
 function TOOL_LIST:Init()
 	self.list_tooltype = vgui.Create("DListView", self)
-		self.list_tooltype:SetPos(0, 0)
-		self.list_tooltype:Dock(FILL)
-		self.list_tooltype:SetTooltip("Select left-click function")
-		self.list_tooltype:SetHeaderHeight( 0 )
-		self.list_tooltype:SetSortable(false)
-		self.list_tooltype:SetMultiSelect(false)
-		self.list_tooltype:AddColumn("")
+	self.list_tooltype:SetPos(0, 0)
+	self.list_tooltype:Dock(FILL)
+	self.list_tooltype:SetTooltip("Select left-click function")
+	self.list_tooltype:SetHeaderHeight( 0 )
+	self.list_tooltype:SetSortable(false)
+	self.list_tooltype:SetMultiSelect(false)
+	self.list_tooltype:AddColumn("")
 
-		for ToolMode in PrecisionAlign.GetToolModes() do
-			local Line = self.list_tooltype:AddLine(ToolMode)
-			function Line:OnSelect()
-				RunConsoleCommand( PA_ .. "toolname", ToolMode)
-			end
+	for ToolMode in PrecisionAlign.GetToolModes() do
+		local Line = self.list_tooltype:AddLine(ToolMode)
+		function Line:OnSelect()
+			RunConsoleCommand( PA_ .. "toolname", ToolMode)
 		end
 
-		self.list_tooltype:SelectItem( self.list_tooltype:GetLine( tooltypeCvar:GetString() ) )
+		if tooltypeCvar:GetString() == ToolMode then
+			self.list_tooltype:SelectItem(Line)
+		end
+	end
 	self:SetSize(CPanel_Width, #self.list_tooltype:GetLines() * 17)
 end
 

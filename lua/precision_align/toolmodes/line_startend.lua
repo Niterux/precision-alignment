@@ -1,1 +1,1 @@
-local MODE = PrecisionAlign.ToolMode("Line - Start / End (Alt)", 2000)
+local MODE = PrecisionAlign.ToolMode(PrecisionAlign.CONSTRUCT_LINE, "Start / End (Alt)", 2000)

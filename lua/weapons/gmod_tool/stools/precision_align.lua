@@ -388,12 +388,12 @@ end
 -- Tool screen for precision alignment stool (client only) - By Wenli
 if SERVER then return end
 
-local BGColor = Color(50, 50, 50, 50)
-local BGColor_Background = Color(103, 100, 110, 255)
-local BGColor_Display = Color(170, 170, 170, 255)
-local BGColor_Point = Color(170, 140, 140, 255)
-local BGColor_Line = Color(140, 140, 170, 255)
-local BGColor_Plane = Color(140, 170, 140, 255)
+local BGColor            = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR
+local BGColor_Background = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_BACKGROUND
+local BGColor_Display    = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_DISPLAY
+local BGColor_Point      = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_POINT
+local BGColor_Line       = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_LINE
+local BGColor_Plane      = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_PLANE
 
 -- surface.CreateFont( "HUDNumber", {60, 400, true, false, "PAToolScreen_Title"} )
 surface.CreateFont("PAToolScreen_Title", {font = "Verdana", size = 60, weight = 400, antialias = true, additive = false})
@@ -402,43 +402,22 @@ surface.CreateFont("PAToolScreen_ToolType", {font = "Verdana", size = 70, weight
 -- surface.CreateFont( "TabLarge",{ 29, 400, true, false, "PAToolScreen_ToolDesc"} )
 surface.CreateFont("PAToolScreen_ToolDesc", {font = "Verdana", size = 29, weight = 400, antialias = true, additive = false})
 
-local ToolTypeLookup = {
-	[1] = {"Point", "Hitpos"},
-	[2] = {"Point", "Coordinate Centre"},
-	[3] = {"Point", "Mass Centre"},
-	[4] = {"Point", "Bounding Box Centre"},
-	[5] = {"Line", "Start / End (Alt)"},
-	[6] = {"Line", "Hitpos + Hitnormal"},
-	[7] = {"Line", "Hitnormal"},
-	[8] = {"Plane", "Hitpos + Hitnormal"},
-	[9] = {"Plane", "Hitnormal"}
-}
-
-local Colour_Current = BGColor_Display
-local ColourLookup = {
-	[1] = BGColor_Point,
-	[2] = BGColor_Point,
-	[3] = BGColor_Point,
-	[4] = BGColor_Point,
-	[5] = BGColor_Line,
-	[6] = BGColor_Line,
-	[7] = BGColor_Line,
-	[8] = BGColor_Plane,
-	[9] = BGColor_Plane
-}
+local CONSTRUCT_POINT = PrecisionAlign.CONSTRUCT_POINT
+local CONSTRUCT_LINE  = PrecisionAlign.CONSTRUCT_LINE
+local CONSTRUCT_PLANE = PrecisionAlign.CONSTRUCT_PLANE
 
 local function construct_exists( construct_type, ID )
 	if not construct_type or not ID then return false end
 
-	if construct_type == "Point" then
+	if construct_type == CONSTRUCT_POINT then
 		if PrecisionAlign.Points[ID].origin then
 			return true
 		end
-	elseif construct_type == "Line" then
+	elseif construct_type == CONSTRUCT_LINE then
 		if PrecisionAlign.Lines[ID].startpoint and PrecisionAlign.Lines[ID].endpoint then
 			return true
 		end
-	elseif construct_type == "Plane" then
+	elseif construct_type == CONSTRUCT_PLANE then
 		if PrecisionAlign.Planes[ID].origin and PrecisionAlign.Planes[ID].normal then
 			return true
 		end
@@ -448,12 +427,12 @@ local function construct_exists( construct_type, ID )
 end
 
 local function GetConstructNum( curToolType )
-	local ToolNum
-	if curToolType >= 1 and curToolType <= 4 then
+	local ToolMode = PrecisionAlign.ToolModes[curToolType]
+	if ToolMode.Construct == CONSTRUCT_POINT then
 		ToolNum = PrecisionAlign.SelectedPoint
-	elseif curToolType >= 5 and curToolType <= 7 then
+	elseif ToolMode.Construct == CONSTRUCT_LINE then
 		ToolNum = PrecisionAlign.SelectedLine
-	elseif curToolType >= 8 and curToolType <= 9 then
+	elseif ToolMode.Construct == CONSTRUCT_PLANE then
 		ToolNum = PrecisionAlign.SelectedPlane
 	end
 	return ToolNum
@@ -483,7 +462,9 @@ local function DrawText_ToolType( y, curToolType )
 	surface.SetFont( "PAToolScreen_ToolType" )
 	surface.SetTextColor( 255, 255, 255, 255 )
 
-	local text = ToolTypeLookup[curToolType][1] or "-"
+	local ToolMode = PrecisionAlign.ToolModes[curToolType]
+
+	local text = PrecisionAlign.GetConstructName(ToolMode.Construct) or "Unknown Toolmode"
 	text = text .. " " .. tostring( GetConstructNum( curToolType ) )
 
 	local w = surface.GetTextSize( text )
@@ -496,7 +477,7 @@ local function DrawText_ToolDesc( y, curToolType )
 	surface.SetFont( "PAToolScreen_ToolDesc" )
 	surface.SetTextColor( 255, 255, 255, 255 )
 
-	local text = ToolTypeLookup[curToolType][2] or "No tool option selected"
+	local text = curToolType or "No tool option selected"
 	local w = surface.GetTextSize( text )
 
 	surface.SetTextPos( 125 - w / 2, y )
@@ -524,7 +505,8 @@ local function DrawIndicators( x, y, w, curToolType )
 		end
 
 		-- Draw indicator status
-		if construct_exists( ToolTypeLookup[ curToolType ][1], i) then
+		local ToolMode = PrecisionAlign.ToolModes[curToolType]
+		if construct_exists(ToolMode.Construct, i) then
 			IndicatorColour = Color(0, 230, 0, 255)
 		else
 			IndicatorColour = Color(50, 50, 50, 255)
@@ -535,16 +517,18 @@ local function DrawIndicators( x, y, w, curToolType )
 	end
 end
 
+local Colour_Current = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_DISPLAY
 -- Main Draw Function
 local function PA_DrawToolScreen( w, h )
 	local r, e = pcall( function()
 		w = tonumber(w) or 256
 		h = tonumber(h) or 256
 
-		local curToolType = GetConVar("precision_align_tooltype"):GetInt()
-
+		local curToolType = GetConVar("precision_align_toolname"):GetString()
+		local toolMode    = PrecisionAlign.ToolModes[curToolType]
 		-- Background colour
-		local Colour_Selected = ColourLookup[curToolType] or BGColor_Display
+		local Colour_Selected = toolMode:GetBackgroundColor()
+
 		for k, v in pairs (Colour_Current) do
 			Colour_Current[k] = v + (Colour_Selected[k] - v) / 10
 		end
