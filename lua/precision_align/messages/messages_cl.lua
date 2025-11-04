@@ -17,10 +17,12 @@ local ICON_MESSAGE = Material("icon16/lightbulb.png")
 
 local function EnqueueMessage(Text, Type, Time)
     local Panel = vgui.Create("PA_NotifyPanel")
-    Panel:SetText(Text)
+    Panel:SetText("Precision Alignment: " .. Text)
     Panel:SetType(Type)
     Panel:SetDeathTime(RealTime() + (Time or 0))
-
+    if PrecisionAlign.MessageQueue:Length() > 6 then
+        PrecisionAlign.MessageQueue:Peek():SetDeathTime(RealTime() + 0.5)
+    end
     PrecisionAlign.MessageQueue:Enqueue(Panel)
 end
 
@@ -54,16 +56,23 @@ end
 function PA_NotifyPanel:SetDeathTime(Time)
     self.DeathTime = Time
     self.Birth = RealTime()
-    self.TTL = Time
+    self.TTL = Time - self.Birth
 end
+
+function PA_NotifyPanel:GetTimeLeftToLive()
+    return self.TTL - (RealTime() - self.Birth)
+end
+
 function PA_NotifyPanel:GetLifeTime()
     return RealTime() - self.Birth
 end
 
 function PA_NotifyPanel:Paint(W, H)
-    local LifeMult = math.Clamp(self:GetLifeTime() * 1.7, 0, 1)
     local M = surface.GetAlphaMultiplier()
-    surface.SetAlphaMultiplier(math.ease.OutQuad(LifeMult))
+    surface.SetAlphaMultiplier(
+        math.ease.OutQuad(math.Clamp(self:GetLifeTime() * 1.7, 0, 1))
+        * math.ease.InQuart(math.Clamp(self:GetTimeLeftToLive() * 1.7, 0, 1))
+    )
 
     DPanel.Paint(self, W, H)
     draw.SimpleText(self.Text, "DermaDefault", (W / 2) + (H / 2), H / 2, color_black, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
@@ -94,7 +103,7 @@ hook.Add("Think", "PA_NotifyPanels", function()
         if IsValid(Panel) then
             local PnlW, PnlH = Panel:GetWide(), Panel:GetTall()
             Panel:SetPos((ScrW / 2) - (PnlW / 2), (ScrH * 0.92) - (PnlH / 2) - (Y * 32))
-            Y = Y + 1
+            Y = Y + math.ease.InQuad(math.Clamp(Panel:GetTimeLeftToLive() * 2, 0, 1))
         else
             PrecisionAlign.MessageQueue:Dequeue()
         end
