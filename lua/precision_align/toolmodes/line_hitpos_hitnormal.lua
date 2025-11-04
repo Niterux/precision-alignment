@@ -1,1 +1,1 @@
-local MODE = PrecisionAlign.ToolMode(PrecisionAlign.CONSTRUCT_LINE, "Hitpos + Hitnormal", 2100)
+local MODE = PrecisionAlign.ToolMode(PrecisionAlign.CONSTRUCT_LINE, "Hitpos + Hitnormal", 2010)
