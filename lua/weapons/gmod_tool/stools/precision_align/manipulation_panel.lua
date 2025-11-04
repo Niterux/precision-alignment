@@ -306,16 +306,16 @@ function DISPLAYS_TAB:Init()
 		self.colourcircle_attachment:SetDefaults( 180, 1, 1, 150 )
 
 	-- Initialize colour settings
-	self.colourcircle_enthighlight:SetColor(	selectHCvar:GetInt(),
-												selectSCvar:GetInt(),
-												selectVCvar:GetInt(),
-												selectACvar:GetInt()
+	self.colourcircle_enthighlight:SetColor(	selectHCvar:GetFloat(),
+												selectSCvar:GetFloat(),
+												selectVCvar:GetFloat(),
+												selectACvar:GetFloat()
 											)
 
-	self.colourcircle_attachment:SetColor(	attHCvar:GetInt(),
-											attSCvar:GetInt(),
-											attVCvar:GetInt(),
-											attACvar:GetInt()
+	self.colourcircle_attachment:SetColor(	attHCvar:GetFloat(),
+											attSCvar:GetFloat(),
+											attVCvar:GetFloat(),
+											attACvar:GetFloat()
 										)
 end
 
