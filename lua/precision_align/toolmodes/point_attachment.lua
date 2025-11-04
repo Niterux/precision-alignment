@@ -21,7 +21,6 @@ function MODE:GetClickPosition(_, Pos, Ent, _)
         PrecisionAlign.Message("Selected attachment '" .. ClosestAttachmentName .. "'")
         return Ent:GetAttachment(ClosestAttachment).Pos
     else
-        PrintTable(PrecisionAlign)
         PrecisionAlign.Warning("Could not find any attachments on this entity.")
         return Pos
     end
