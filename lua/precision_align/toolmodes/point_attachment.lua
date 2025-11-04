@@ -8,7 +8,7 @@ function MODE:GetClickPosition(_, Pos, Ent, _)
     for _, AttachmentIdx in ipairs(Attachments) do
         local Attachment = Ent:GetAttachment(AttachmentIdx.id)
         if Attachment then
-            local Dist = Pos:GetDistance(Attachment.Pos)
+            local Dist = Pos:Distance(Attachment.Pos)
             if Dist < ClosestAttachmentDistance then
                 ClosestAttachment = AttachmentIdx.id
                 ClosestAttachmentName = AttachmentIdx.name

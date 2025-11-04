@@ -8,7 +8,7 @@ end
 util.AddNetworkString("PrecisionAlign_Message")
 local function EnqueueMessage(Text, Type, Time)
     if not IsValid(MessageTarget) then return ErrorNoHalt("Cannot send a message without a valid message target!") end
-    net.Start(PrecisionAlign_Message)
+    net.Start("PrecisionAlign_Message")
     net.WriteString(Text)
     net.WriteUInt(Type, 5)
     net.WriteFloat(Time)

@@ -260,7 +260,7 @@ function TOOL:GetClickPosition(trace)
 		Pos = trace.HitPos
 	elseif toolmode.GetClickPosition then
 		PrecisionAlign.SetNextMessageTarget(self:GetOwner())
-		Pos = toolmode:GetClickPosition(trace, Pos, Ent, Phys)
+		Pos = toolmode:GetClickPosition(trace, trace.HitPos, Ent, Phys)
 		PrecisionAlign.SetNextMessageTarget()
 	elseif Edge_Snap or Centre_Snap then
 		local HitPosL = Ent:WorldToLocal( trace.HitPos )
