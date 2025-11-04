@@ -72,6 +72,7 @@ local function play_sound_false()
 end
 ]]
 
+
 local MANIPULATION_FRAME = {}
 function MANIPULATION_FRAME:Init()
 	self:SetSize(900, 500)
@@ -80,12 +81,16 @@ function MANIPULATION_FRAME:Init()
 	self:SetVisible( true )
 	self:SetDraggable( true )
 	self:SetSizable( false )
-	self:ShowCloseButton( true )
+	self.btnClose:SetVisible(true)
+	self.btnMaxim:SetVisible(false)
+	self.btnMinim:SetVisible(false)
 	self:SetDeleteOnClose( false )
 	self:MakePopup()
 	self:SetKeyboardInputEnabled( false )
 
-	self.version_text = AddMenuText( "Version: v" .. PrecisionAlign.Version, 700, 5, self )
+	surface.SetFont("DermaDefault")
+	local text = "Version: v" .. PrecisionAlign.Version
+	self.version_text = AddMenuText(text, self.btnClose:GetX() - surface.GetTextSize(text) - 9, 5, self )
 
 	self.body = vgui.Create( "PA_Manipulation_Body", self )
 	self.panel = vgui.Create( "PA_Manipulation_Panel", self.body )
