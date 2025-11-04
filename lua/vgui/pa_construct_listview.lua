@@ -3,11 +3,11 @@ function CONSTRUCT_LISTVIEW:Init()
 	self:SetSize(110, 169)
 end
 
-function CONSTRUCT_LISTVIEW:Text( title, text )
-	self.construct_type = text
+function CONSTRUCT_LISTVIEW:Text( title, construct )
+	self.construct_type = construct
 	self:AddColumn( "" .. title)
 	for i = 1, 9 do
-		local line = self:AddLine(text .. " " .. tostring(i))
+		local line = self:AddLine(PrecisionAlign.GetConstructName(construct) .. " " .. tostring(i))
 		line.indicator = vgui.Create( "PA_Indicator", line )
 	end
 
