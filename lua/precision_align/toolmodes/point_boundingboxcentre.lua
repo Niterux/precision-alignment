@@ -1,0 +1,1 @@
+local MODE = PrecisionAlign.ToolMode("Point - Bounding Box Centre", 1300)

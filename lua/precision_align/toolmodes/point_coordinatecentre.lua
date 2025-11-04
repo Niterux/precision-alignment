@@ -1,0 +1,1 @@
+local MODE = PrecisionAlign.ToolMode("Point - Coordinate Centre", 1100)

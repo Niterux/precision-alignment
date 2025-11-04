@@ -1521,17 +1521,11 @@ function TOOL_LIST:Init()
 		self.list_tooltype:SetSortable(false)
 		self.list_tooltype:SetMultiSelect(false)
 		self.list_tooltype:AddColumn("")
-		--self.list_tooltype:AddColumn("                     Left Click Assignment")
 
-		self.list_tooltype:AddLine("Point - Hitpos")
-		self.list_tooltype:AddLine("Point - Coordinate Centre")
-		self.list_tooltype:AddLine("Point - Mass Centre")
-		self.list_tooltype:AddLine("Point - Bounding Box Centre")
-		self.list_tooltype:AddLine("Line  - Start / End (Alt)")
-		self.list_tooltype:AddLine("Line  - Hitpos + Hitnormal")
-		self.list_tooltype:AddLine("Line  - Hitnormal")
-		self.list_tooltype:AddLine("Plane - Hitpos + Hitnormal")
-		self.list_tooltype:AddLine("Plane - Hitnormal")
+		for ToolMode in PrecisionAlign.GetToolModes() do
+			self.list_tooltype:AddLine(ToolMode)
+		end
+
 		self.list_tooltype:SelectItem( self.list_tooltype:GetLine( tooltypeCvar:GetInt() ) )
 		self.list_tooltype.OnRowSelected = function(_, line)
 			RunConsoleCommand( PA_ .. "tooltype", tostring(line) )
