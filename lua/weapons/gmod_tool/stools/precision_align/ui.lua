@@ -1522,8 +1522,8 @@ function TOOL_LIST:Init()
 	self.list_tooltype:SetMultiSelect(false)
 	self.list_tooltype:AddColumn("")
 
-	for ToolMode in PrecisionAlign.GetToolModes() do
-		local Line = self.list_tooltype:AddLine(ToolMode)
+	for ToolMode, ToolModeObj in PrecisionAlign.GetToolModes() do
+		local Line = self.list_tooltype:AddLine()
 		function Line:OnSelect()
 			RunConsoleCommand( PA_ .. "toolname", ToolMode)
 		end
@@ -1531,42 +1531,35 @@ function TOOL_LIST:Init()
 		if tooltypeCvar:GetString() == ToolMode then
 			self.list_tooltype:SelectItem(Line)
 		end
-	end
-	self:SetSize(CPanel_Width, #self.list_tooltype:GetLines() * 17)
-end
+		Line.ToolMode = ToolMode
+		local DrawColorOutline = ToolModeObj:GetBackgroundColor():Copy()
+		local DrawColor = DrawColorOutline:Copy()
 
-function TOOL_LIST:Paint()
-	local width = self:GetWide()
-
-	-- Draw colored tool option backgrounds
-	for i = 1, 9 do
-		local line = self.list_tooltype:GetLine(i)
-		local height = line:GetTall()
-		local DrawColorOutline
-
-		if i < 5 then
-			DrawColorOutline = table.Copy(BGColor_Point)
-		elseif i < 8 then
-			DrawColorOutline = table.Copy(BGColor_Line)
-		else
-			DrawColorOutline = table.Copy(BGColor_Plane)
-		end
-
-		local DrawColor = DrawColorOutline
-
-		line.Paint = function()
-			if line:IsSelected() then
+		Line.Paint = function(self, width, height)
+			local TextColor
+			if self.Highlighted then
+				DrawColor.a = 255
+			elseif self:IsSelected() then
 				DrawColor.a = 150
+				TextColor = color_white
 			else
 				DrawColor.a = 200
+				TextColor = color_black
 			end
 			surface.SetDrawColor(DrawColor)
 			surface.DrawRect(0, 0, width, height)
 
 			surface.SetDrawColor(DrawColorOutline)
 			surface.DrawOutlinedRect(0, 0, width - 2, height)
+
+			draw.SimpleText(ToolMode, "DermaDefault", 4, height / 2, TextColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 		end
 	end
+	self:SetSize(CPanel_Width, #self.list_tooltype:GetLines() * 17)
+end
+
+function TOOL_LIST:Paint()
+
 end
 
 vgui.Register("PA_CPanel_tool_list", TOOL_LIST, "DPanel")

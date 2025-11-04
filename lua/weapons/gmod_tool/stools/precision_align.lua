@@ -477,7 +477,8 @@ local function DrawText_ToolDesc( y, curToolType )
 	surface.SetFont( "PAToolScreen_ToolDesc" )
 	surface.SetTextColor( 255, 255, 255, 255 )
 
-	local text = curToolType or "No tool option selected"
+	local ToolMode = PrecisionAlign.ToolModes[curToolType]
+	local text = ToolMode.Name or "No tool option selected"
 	local w = surface.GetTextSize( text )
 
 	surface.SetTextPos( 125 - w / 2, y )

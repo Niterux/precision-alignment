@@ -35,7 +35,9 @@ function PrecisionAlign.Warning(Text)
     if not ShowWarns:GetBool() then return end
     EnqueueMessage(Text, NOTIFY_ERROR, 5)
 end
-
+net.Receive("PrecisionAlign_Message", function()
+    EnqueueMessage(net.ReadString(), net.ReadUInt(5), net.ReadFloat())
+end)
 local PA_NotifyPanel = {}
 function PA_NotifyPanel:SetText(Text)
     self.Text = Text
