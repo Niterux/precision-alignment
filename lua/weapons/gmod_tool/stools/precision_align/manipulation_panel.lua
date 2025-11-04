@@ -63,16 +63,6 @@ local BGColor_Plane      = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_PLANE
 local BGColor_Rotation   = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_ROTATION
 
 
-local function play_sound_true()
-	LocalPlayer():EmitSound("buttons/button15.wav", 100, 100)
-end
---[[
-local function play_sound_false()
-	LocalPlayer():EmitSound("buttons/lightswitch2.wav", 100, 100)
-end
-]]
-
-
 local MANIPULATION_FRAME = {}
 function MANIPULATION_FRAME:Init()
 	self:SetSize(900, 500)
@@ -415,7 +405,7 @@ function POINTS_TAB:Init()
 		self.list_primarypoint:SetMultiSelect(false)
 		self.list_primarypoint.DoDoubleClick = function()
 			update_primary_listview()
-			play_sound_true()
+			PrecisionAlign.PlaySoundTrue()
 		end
 
 	self.checkbox_relative1 = vgui.Create( "DCheckBoxLabel", self )
@@ -513,7 +503,7 @@ function POINTS_TAB:Init()
 		self.list_secondarypoint:SetMultiSelect(false)
 		self.list_secondarypoint.DoDoubleClick = function()
 			update_secondary_listview()
-			play_sound_true()
+			PrecisionAlign.PlaySoundTrue()
 		end
 
 
@@ -776,7 +766,7 @@ function LINES_TAB:Init()
 		self.list_primary:SetMultiSelect(false)
 		self.list_primary.DoDoubleClick = function()
 			update_primary_listview()
-			play_sound_true()
+			PrecisionAlign.PlaySoundTrue()
 		end
 
 	self.button_set = vgui.Create( "PA_Function_Button", self )
@@ -1224,7 +1214,7 @@ function PLANES_TAB:Init()
 		self.list_primary:SetMultiSelect(false)
 		self.list_primary.DoDoubleClick = function()
 			update_primary_listview()
-			play_sound_true()
+			PrecisionAlign.PlaySoundTrue()
 		end
 
 

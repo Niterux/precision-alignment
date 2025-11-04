@@ -162,31 +162,6 @@ do
 end
 
 do
-    local PA_Indicator = {}
-
-    function PA_Indicator:Init()
-        self.offset = 0
-    end
-
-    function PA_Indicator:PerformLayout()
-        local offset = self:GetParent():GetListView().VBar:IsVisible() and self:GetParent():GetTall() - 4 or 0
-        local width, height = self:GetParent():GetWide() - 5 - offset, self:GetParent():GetTall() - 4
-        self:SetSize(height, height)
-        self:SetPos(width - height, 2)
-    end
-
-    function PA_Indicator:Paint(w, h)
-        local textbox = self:GetParent()
-        if PrecisionAlign.Functions.construct_exists(textbox:GetListView().construct_type, textbox:GetID()) then
-            local Pulse = Color(126, 255, 126)
-            Pulse:SetBrightness(math.Remap(math.cos(RealTime() * 6), -1, 1, 0.89, 1))
-            draw.RoundedBox(6, 0, 0, w, h, Pulse)
-        end
-    end
-
-    vgui.Register("PA_Indicator", PA_Indicator, "DPanel")
-end
-do
     local PA_ConstructList = {}
 
     function PA_ConstructList:Init()
@@ -367,34 +342,21 @@ do
     vgui.Register("PA_Tool_Construct_Panel", PA_Tool_Construct_Panel, "DPanel")
 end
 
-local function play_sound_true()
-    LocalPlayer():EmitSound("buttons/button15.wav", 100, 100)
-end
-
-local function play_sound_false()
-    LocalPlayer():EmitSound("buttons/lightswitch2.wav", 100, 100)
-end
-
-do
-    local PA_Function_Button = {}
-
-    function PA_Function_Button:Init()
-        self:SetSize(200, 25)
+-- These hooks allow the slider text boxes to steal keyboard focus
+local function TextFocusOn( pnl )
+    if	pnl:GetClassName() == "TextEntry" and pnl.Type == "PA" then
+        PA_manipulation_panel:SetKeyboardInputEnabled( true )
     end
-
-    function PA_Function_Button:SetFunction( func )
-        self.DoClick = function()
-            local ret = func()
-            if ret == true then
-                play_sound_true()
-            elseif ret == false then
-                play_sound_false()
-            end
-        end
-    end
-
-    vgui.Register("PA_Function_Button", PA_Function_Button, "DButton")
 end
+hook.Add( "OnTextEntryGetFocus", "PAKeyboardFocusOn", TextFocusOn )
+
+local function TextFocusOff( pnl )
+    if pnl:GetClassName() == "TextEntry" and pnl.Type == "PA" then
+        PA_manipulation_panel:SetKeyboardInputEnabled( false )
+    end
+end
+hook.Add( "OnTextEntryLoseFocus", "PAKeyboardFocusOff", TextFocusOff )
+
 
 -- Set up the full UI.
 do
