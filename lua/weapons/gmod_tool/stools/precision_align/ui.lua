@@ -26,7 +26,6 @@ local pointcolour = { r = 255, g = 0, b = 0, a = 255 }
 local linecolour = { r = 0, g = 0, b = 255, a = 255 }
 local planecolour = { r = 0, g = 230, b = 0, a = 255 }
 
-local showWarnsCvar = GetConVar( PA_ .. "display_warnings" )
 local stackNumCvar = GetConVar( PA_ .. "stack_num" )
 local stackNoCollideCvar = GetConVar( PA_ .. "stack_nocollide" )
 local attachHCvar = GetConVar( PA_ .. "attachcolour_h" )
@@ -40,11 +39,7 @@ local sizeLineEndCvar = GetConVar( PA_ .. "size_line_end" )
 local sizePlaneCvar = GetConVar( PA_ .. "size_plane" )
 local sizePlaneNormCvar = GetConVar( PA_ .. "size_plane_normal" )
 
-local function Warning( text )
-	if showWarnsCvar:GetInt() == 1 then
-		LocalPlayer():ChatPrint( "(PA) ERROR: " .. text )
-	end
-end
+local Warning = PrecisionAlignment.Warning
 
 local function AddMenuText( text, x, y, parent )
 	local Text = vgui.Create( "DLabel", parent )
