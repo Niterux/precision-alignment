@@ -146,15 +146,15 @@ end
 PrecisionAlign.Functions.construct_exists = function( construct_type, ID )
 	if not construct_type or not ID then return false end
 
-	if construct_type == "Point" then
+	if construct_type == PrecisionAlign.CONSTRUCT_POINT then
 		if PrecisionAlign.Points[ID].origin then
 			return true
 		end
-	elseif construct_type == "Line" then
+	elseif construct_type == PrecisionAlign.CONSTRUCT_LINE then
 		if PrecisionAlign.Lines[ID].startpoint and PrecisionAlign.Lines[ID].endpoint then
 			return true
 		end
-	elseif construct_type == "Plane" then
+	elseif construct_type == PrecisionAlign.CONSTRUCT_PLANE then
 		if PrecisionAlign.Planes[ID].origin and PrecisionAlign.Planes[ID].normal then
 			return true
 		end

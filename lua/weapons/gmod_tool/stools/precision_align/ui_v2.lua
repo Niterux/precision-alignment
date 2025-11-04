@@ -169,16 +169,18 @@ do
     end
 
     function PA_Indicator:PerformLayout()
-        local width, height = self:GetParent():GetWide() - 5 - self.offset, self:GetParent():GetTall() - 4
+        local offset = self:GetParent():GetListView().VBar:IsVisible() and self:GetParent():GetTall() - 4 or 0
+        local width, height = self:GetParent():GetWide() - 5 - offset, self:GetParent():GetTall() - 4
         self:SetSize(height, height)
         self:SetPos(width - height, 2)
     end
 
-    function PA_Indicator:Paint()
+    function PA_Indicator:Paint(w, h)
         local textbox = self:GetParent()
-
         if PrecisionAlign.Functions.construct_exists(textbox:GetListView().construct_type, textbox:GetID()) then
-            draw.RoundedBox(6, 0, 0, self:GetWide(), self:GetTall(), Color(121, 247, 121))
+            local Pulse = Color(126, 255, 126)
+            Pulse:SetBrightness(math.Remap(math.cos(RealTime() * 6), -1, 1, 0.89, 1))
+            draw.RoundedBox(6, 0, 0, w, h, Pulse)
         end
     end
 
@@ -477,6 +479,26 @@ do
     Points.list_primarypoint, Points.list_secondarypoint = Points:SetSelectionMode(SelectPoint, PointDbClick, SelectPoint2, PointDbClick) -- Assignment for backwards compat
     do
         local View, Delete, Attach, DeleteAll, MoveEntity = Points:AddButtons(true)
+        View:SetFunction(function()
+            if not PrecisionAlign.Functions.construct_exists( "Point", PrecisionAlign.SelectedPoint ) then return false end
+            local point = PrecisionAlign.Functions.point_global( PrecisionAlign.SelectedPoint )
+            return PrecisionAlign.Functions.set_playerview( point.origin )
+        end)
+
+        Delete:SetFunction(function()
+            return PrecisionAlign.Functions.delete_point( PrecisionAlign.SelectedPoint )
+        end)
+
+        Attach:SetFunction(function()
+            return PrecisionAlign.Functions.attach_point( PrecisionAlign.SelectedPoint, PrecisionAlign.ActiveEnt )
+        end)
+
+        DeleteAll:SetFunction(function()
+            Points.list_primarypoint:SelectFirstItem()
+            Points.list_secondarypoint:SelectFirstItem()
+            return PrecisionAlign.Functions.delete_points()
+        end)
+
         MoveEntity:SetFunction(function()
             PrecisionAlign.SelectedPoint2 = Points.list_secondarypoint:GetSelectedLine()
             if PrecisionAlign.SelectedPoint == PrecisionAlign.SelectedPoint2 then
@@ -502,6 +524,24 @@ do
     Lines.list_line = Lines:SetSelectionMode(false) -- Assignment for backwards compat
     do
         local View, Delete, Attach, DeleteAll = Lines:AddButtons()
+        View:SetFunction(function()
+            if not PrecisionAlign.Functions.construct_exists( "Line", PrecisionAlign.SelectedLine ) then return false end
+            local line = PrecisionAlign.Functions.line_global( PrecisionAlign.SelectedLine )
+            return PrecisionAlign.Functions.set_playerview( line.startpoint )
+        end)
+
+        Delete:SetFunction(function()
+            return PrecisionAlign.Functions.delete_line(PrecisionAlign.SelectedLine)
+        end)
+
+        Attach:SetFunction(function()
+            return PrecisionAlign.Functions.attach_line(PrecisionAlign.SelectedLine, PrecisionAlign.ActiveEnt)
+        end)
+
+        DeleteAll:SetFunction(function()
+            Lines.list_line:SelectFirstItem()
+            return PrecisionAlign.Functions.delete_lines()
+        end)
     end
 
     local Planes = vgui.Create("PA_Tool_Construct_Panel")
@@ -511,6 +551,25 @@ do
     Planes.list_plane = Planes:SetSelectionMode(false) -- Assignment for backwards compat
     do
         local View, Delete, Attach, DeleteAll = Planes:AddButtons()
+
+        View:SetFunction(function()
+            if not PrecisionAlign.Functions.construct_exists( "Plane", PrecisionAlign.SelectedPlane ) then return false end
+            local plane = PrecisionAlign.Functions.plane_global( PrecisionAlign.SelectedPlane )
+            return PrecisionAlign.Functions.set_playerview( plane.origin )
+        end)
+
+        Delete:SetFunction(function()
+            return PrecisionAlign.Functions.delete_plane(PrecisionAlign.SelectedPlane)
+        end)
+
+        Attach:SetFunction(function()
+            return PrecisionAlign.Functions.attach_plane(PrecisionAlign.SelectedPlane, PrecisionAlign.ActiveEnt)
+        end)
+
+        DeleteAll:SetFunction(function()
+            Planes.list_plane:SelectFirstItem()
+            return PrecisionAlign.Functions.delete_planes()
+        end)
     end
 end
 
