@@ -14,7 +14,7 @@ TOOL.Information	= {
 local PA = "precision_align"
 local PA_ = PA .. "_"
 
-AddCSLuaFile( PA .. "/ui.lua" )
+AddCSLuaFile( PA .. "/ui_v2.lua" )
 AddCSLuaFile( PA .. "/manipulation_panel.lua" )
 
 -- local typeCvar = GetConVar("precision_align_tooltype")
@@ -206,7 +206,7 @@ end
 -- Build CPanel
 if CLIENT then
 	function TOOL.BuildCPanel()
-		include( "weapons/gmod_tool/stools/" .. PA .. "/ui.lua" )
+		include( "weapons/gmod_tool/stools/" .. PA .. "/ui_v2.lua" )
 	end
 
 	local BuildCPanel = TOOL.BuildCPanel
