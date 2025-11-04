@@ -39,7 +39,7 @@ local sizeLineEndCvar = GetConVar( PA_ .. "size_line_end" )
 local sizePlaneCvar = GetConVar( PA_ .. "size_plane" )
 local sizePlaneNormCvar = GetConVar( PA_ .. "size_plane_normal" )
 
-local Warning = PrecisionAlignment.Warning
+local Warning = PrecisionAlign.Warning
 
 local function AddMenuText( text, x, y, parent )
 	local Text = vgui.Create( "DLabel", parent )
