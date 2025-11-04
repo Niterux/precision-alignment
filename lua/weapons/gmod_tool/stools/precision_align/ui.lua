@@ -1117,21 +1117,21 @@ function CONSTRUCT_MULTISELECT:Init()
 
 			for _, v in pairs( self.list_points:GetSelected() ) do
 				ID = v:GetID()
-				if PrecisionAlign.Functions.construct_exists( "Point", ID ) then
+				if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, ID ) then
 					PrecisionAlign.Functions.attach_point( ID, PrecisionAlign.ActiveEnt )
 				end
 			end
 
 			for _, v in pairs( self.list_lines:GetSelected() ) do
 				ID = v:GetID()
-				if PrecisionAlign.Functions.construct_exists( "Line", ID ) then
+				if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, ID ) then
 					PrecisionAlign.Functions.attach_line( ID, PrecisionAlign.ActiveEnt )
 				end
 			end
 
 			for _, v in pairs( self.list_planes:GetSelected() ) do
 				ID = v:GetID()
-				if PrecisionAlign.Functions.construct_exists( "Plane", ID ) then
+				if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_PLANE, ID ) then
 					PrecisionAlign.Functions.attach_plane( ID, PrecisionAlign.ActiveEnt )
 				end
 			end
@@ -1204,21 +1204,21 @@ function CONSTRUCT_MULTISELECT:GetSelection()
 
 	for _, v in pairs( self.list_points:GetSelected() ) do
 		local ID = v:GetID()
-		if PrecisionAlign.Functions.construct_exists( "Point", ID  ) then
+		if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, ID  ) then
 			table.insert( selection.points, ID )
 		end
 	end
 
 	for _, v in pairs( self.list_lines:GetSelected() ) do
 		local ID = v:GetID()
-		if PrecisionAlign.Functions.construct_exists( "Line", ID  ) then
+		if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, ID  ) then
 			table.insert( selection.lines, ID )
 		end
 	end
 
 	for _, v in pairs( self.list_planes:GetSelected() ) do
 		local ID = v:GetID()
-		if PrecisionAlign.Functions.construct_exists( "Plane", ID  ) then
+		if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_PLANE, ID  ) then
 			table.insert( selection.planes, ID )
 		end
 	end
@@ -1341,7 +1341,7 @@ function TOOL_POINT_PANEL:Init()
 	create_buttons_standard( self, "point" )
 
 		self.button_view:SetFunction( function()
-			if not PrecisionAlign.Functions.construct_exists( "Point", PrecisionAlign.SelectedPoint ) then return false end
+			if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, PrecisionAlign.SelectedPoint ) then return false end
 			local point = PrecisionAlign.Functions.point_global( PrecisionAlign.SelectedPoint )
 			return PrecisionAlign.Functions.set_playerview( point.origin )
 		end )
@@ -1417,7 +1417,7 @@ function TOOL_LINE_PANEL:Init()
 	create_buttons_standard( self, "line" )
 
 		self.button_view:SetFunction( function()
-			if not PrecisionAlign.Functions.construct_exists( "Line", PrecisionAlign.SelectedLine ) then return false end
+			if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, PrecisionAlign.SelectedLine ) then return false end
 			local line = PrecisionAlign.Functions.line_global( PrecisionAlign.SelectedLine )
 			return PrecisionAlign.Functions.set_playerview( line.startpoint )
 		end )
@@ -1486,7 +1486,7 @@ function TOOL_PLANE_PANEL:Init()
 	create_buttons_standard( self, "plane" )
 
 		self.button_view:SetFunction( function()
-			if not PrecisionAlign.Functions.construct_exists( "Plane", PrecisionAlign.SelectedPlane ) then return false end
+			if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_PLANE, PrecisionAlign.SelectedPlane ) then return false end
 			local plane = PrecisionAlign.Functions.plane_global( PrecisionAlign.SelectedPlane )
 			return PrecisionAlign.Functions.set_playerview( plane.origin )
 		end )

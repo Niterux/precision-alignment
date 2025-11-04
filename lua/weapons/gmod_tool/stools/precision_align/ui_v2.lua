@@ -480,7 +480,7 @@ do
     do
         local View, Delete, Attach, DeleteAll, MoveEntity = Points:AddButtons(true)
         View:SetFunction(function()
-            if not PrecisionAlign.Functions.construct_exists( "Point", PrecisionAlign.SelectedPoint ) then return false end
+            if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, PrecisionAlign.SelectedPoint ) then return false end
             local point = PrecisionAlign.Functions.point_global( PrecisionAlign.SelectedPoint )
             return PrecisionAlign.Functions.set_playerview( point.origin )
         end)
@@ -525,7 +525,7 @@ do
     do
         local View, Delete, Attach, DeleteAll = Lines:AddButtons()
         View:SetFunction(function()
-            if not PrecisionAlign.Functions.construct_exists( "Line", PrecisionAlign.SelectedLine ) then return false end
+            if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, PrecisionAlign.SelectedLine ) then return false end
             local line = PrecisionAlign.Functions.line_global( PrecisionAlign.SelectedLine )
             return PrecisionAlign.Functions.set_playerview( line.startpoint )
         end)
@@ -553,7 +553,7 @@ do
         local View, Delete, Attach, DeleteAll = Planes:AddButtons()
 
         View:SetFunction(function()
-            if not PrecisionAlign.Functions.construct_exists( "Plane", PrecisionAlign.SelectedPlane ) then return false end
+            if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_PLANE, PrecisionAlign.SelectedPlane ) then return false end
             local plane = PrecisionAlign.Functions.plane_global( PrecisionAlign.SelectedPlane )
             return PrecisionAlign.Functions.set_playerview( plane.origin )
         end)

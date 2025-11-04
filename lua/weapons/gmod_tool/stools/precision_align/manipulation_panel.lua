@@ -631,7 +631,7 @@ function POINTS_TAB:Init()
 			local selection = self.functions_list_functionpoints:GetSelected()
 			if #selection == 1 then
 				local pointID = selection[1]:GetID()
-				if PrecisionAlign.Functions.construct_exists( "Point", pointID ) then
+				if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, pointID ) then
 					local point = PrecisionAlign.Functions.point_global(pointID)
 					self.sliders_origin1:SetValues(point.origin)
 					return true
@@ -996,7 +996,7 @@ function LINES_TAB:Init()
 		local selection = self.functions_list_functionlines:GetSelected()
 		if #selection == 1 then
 			local lineID = selection[1]:GetID()
-			if PrecisionAlign.Functions.construct_exists( "Line", lineID ) then
+			if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, lineID ) then
 				local line = PrecisionAlign.Functions.line_global(lineID)
 				return line
 			end
@@ -1110,7 +1110,7 @@ function LINES_TAB:Init()
 
 			for _, v in pairs(selection) do
 				lineID = v:GetID()
-				if PrecisionAlign.Functions.construct_exists( "Line", lineID ) then
+				if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, lineID ) then
 					line = PrecisionAlign.Functions.line_global( lineID )
 					totalvec = totalvec + line.endpoint - line.startpoint
 				end
@@ -1133,7 +1133,7 @@ function LINES_TAB:Init()
 				return false
 			end
 
-			if not PrecisionAlign.Functions.construct_exists( "Line", selection ) then
+			if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, selection ) then
 				Warning("Line not correctly defined")
 				return false
 			end
@@ -1346,7 +1346,7 @@ function PLANES_TAB:Init()
 		local selection = self.functions_list_functionplanes:GetSelected()
 		if #selection == 1 then
 			local planeID = selection[1]:GetID()
-			if PrecisionAlign.Functions.construct_exists( "Plane", planeID ) then
+			if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_PLANE, planeID ) then
 				local plane = PrecisionAlign.Functions.plane_global(planeID)
 				return plane
 			end
@@ -1536,7 +1536,7 @@ function MOVE_TAB:Init()
 				return false
 			end
 
-			if not PrecisionAlign.Functions.construct_exists( "Line", selected_line ) then
+			if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, selected_line ) then
 				Warning("Line not correctly defined")
 				return false
 			end
@@ -1558,7 +1558,7 @@ function MOVE_TAB:Init()
 			-- Check pivot selection
 			local pivot_selection = self.list_pivotpoint:GetSelectedLine()
 			local pivot = line.startpoint
-			if pivot_selection and PrecisionAlign.Functions.construct_exists( "Point", pivot_selection ) then
+			if pivot_selection and PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, pivot_selection ) then
 				pivot = PrecisionAlign.Functions.point_global( pivot_selection ).origin
 			end
 
@@ -1629,9 +1629,9 @@ function MOVE_TAB:Init()
 					Warning( "Select Point 1" ) return false
 				elseif not point2 then
 					Warning( "Select Point 2" ) return false
-				elseif not PrecisionAlign.Functions.construct_exists( "Point", point1 ) then
+				elseif not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, point1 ) then
 					Warning( "Point " .. tostring(point1) .. " not defined" ) return false
-				elseif not PrecisionAlign.Functions.construct_exists( "Point", point2 ) then
+				elseif not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, point2 ) then
 					Warning( "Point " .. tostring(point2) .. " not defined" ) return false
 				end
 				selection_primary = { point1, point2 }
@@ -1639,7 +1639,7 @@ function MOVE_TAB:Init()
 				local line = self.list_line_1:GetSelectedLine()
 				if not line then
 					Warning( "Select Line 1" ) return false
-				elseif not PrecisionAlign.Functions.construct_exists( "Line", line ) then
+				elseif not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, line ) then
 					Warning( "Line " .. tostring(line) .. " not defined" ) return false
 				end
 				selection_primary = { line }
@@ -1647,7 +1647,7 @@ function MOVE_TAB:Init()
 				local plane = self.list_plane_1:GetSelectedLine()
 				if not plane then
 					Warning( "Select Plane 1" ) return false
-				elseif not PrecisionAlign.Functions.construct_exists( "Plane", plane ) then
+				elseif not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_PLANE, plane ) then
 					Warning( "Plane " .. tostring(plane) .. " not defined" ) return false
 				end
 				selection_primary = { plane }
@@ -1781,7 +1781,7 @@ function MOVE_TAB:Init()
 			-- Check pivot selection
 			local pivot_selection = self.list_pivotpoint:GetSelectedLine()
 			local pivot
-			if pivot_selection and PrecisionAlign.Functions.construct_exists( "Point", pivot_selection ) then
+			if pivot_selection and PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, pivot_selection ) then
 				pivot = PrecisionAlign.Functions.point_global( pivot_selection ).origin
 			end
 
@@ -2113,7 +2113,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_line_move_startpoint.func = function( selection_primary, selection_secondary )
 			local origin = PrecisionAlign.Functions.point_global( selection_secondary[1] ).origin
 
-			if PrecisionAlign.Functions.construct_exists( "Line", selection_primary ) then
+			if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, selection_primary ) then
 				local startpoint = PrecisionAlign.Functions.line_global( selection_primary ).startpoint
 				local endpoint = PrecisionAlign.Functions.line_global( selection_primary ).endpoint
 
@@ -2339,7 +2339,7 @@ function ROTATION_TAB:Init()
 
 			local pivot = self.list_pivotpoint:GetSelectedLine()
 			local vec
-			if pivot and PrecisionAlign.Functions.construct_exists( "Point", pivot ) then
+			if pivot and PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, pivot ) then
 				vec = PrecisionAlign.Functions.point_global( pivot ).origin
 			end
 
@@ -2578,7 +2578,7 @@ function ROTATION_TAB:Init()
 				return false
 			end
 
-			if not PrecisionAlign.Functions.construct_exists( "Line", selected_line ) then
+			if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, selected_line ) then
 				Warning("Line not correctly defined")
 				return false
 			end
@@ -2626,7 +2626,7 @@ function ROTATION_TAB:Init()
 
 			local pivot = self.list_pivotpoint:GetSelectedLine()
 			local vec = line.startpoint
-			if pivot and PrecisionAlign.Functions.construct_exists( "Point", pivot ) then
+			if pivot and PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, pivot ) then
 				vec = PrecisionAlign.Functions.point_global( pivot ).origin
 			end
 
@@ -2682,7 +2682,7 @@ function ROTATION_TAB:Init()
 
 			local pivot = self.list_pivotpoint:GetSelectedLine()
 			local vec
-			if pivot and PrecisionAlign.Functions.construct_exists( "Point", pivot ) then
+			if pivot and PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, pivot ) then
 				vec = PrecisionAlign.Functions.point_global( pivot ).origin
 			end
 
@@ -2823,7 +2823,7 @@ function ROTATION_FUNCTIONS_TAB:Init()
 			-- Filter out non-existant pivot / axis selections before passing to functions
 			local pivot = self.list_pivotpoint:GetSelectedLine()
 			if pivot then
-				if not PrecisionAlign.Functions.construct_exists( "Point", pivot ) then
+				if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, pivot ) then
 					pivot = nil
 				else
 					pivot = PrecisionAlign.Functions.point_global( pivot ).origin
@@ -2832,7 +2832,7 @@ function ROTATION_FUNCTIONS_TAB:Init()
 
 			local axis = self.list_line_axis:GetSelectedLine()
 			if axis then
-				if not PrecisionAlign.Functions.construct_exists( "Line", axis ) then
+				if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, axis ) then
 					axis = nil
 				else
 					axis = PrecisionAlign.Functions.line_global( axis )
@@ -3060,7 +3060,7 @@ function CONSTRAINTS_TAB:Init()
 				return false
 			end
 
-			if not PrecisionAlign.Functions.construct_exists( "Point", selection1 ) then
+			if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, selection1 ) then
 				Warning("Point 1 has not been defined")
 				return false
 			end
@@ -3074,7 +3074,7 @@ function CONSTRAINTS_TAB:Init()
 					return false
 				end
 
-				if not PrecisionAlign.Functions.construct_exists( "Point", selection2 ) then
+				if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, selection2 ) then
 					Warning("Point 2 has not been defined")
 					return false
 				end
@@ -3084,7 +3084,7 @@ function CONSTRAINTS_TAB:Init()
 			local point1 = PrecisionAlign.Points[ selection1 ]
 			local point2
 
-			if not PrecisionAlign.Functions.construct_exists( "Point", selection2 ) then
+			if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, selection2 ) then
 				point2 = { ["origin"] = PrecisionAlign.Functions.point_global(selection1).origin + Vector(0, 0, 1) }	-- Set so default axis dir is (0, 0, 1)
 			else
 				point2 = PrecisionAlign.Points[ selection2 ]
@@ -3252,7 +3252,7 @@ function CONSTRAINTS_AXIS_TAB:Init()
 		local axis_selection = self.list_point_axis:GetSelectedLine()
 		local axis = 0
 		local line
-		if axis_selection and PrecisionAlign.Functions.construct_exists( "Line", axis_selection ) then
+		if axis_selection and PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, axis_selection ) then
 			line = PrecisionAlign.Functions.line_global( axis_selection )
 			axis = ( line.endpoint - line.startpoint ):GetNormal()
 			axis = { x = axis.x, y = axis.y, z = axis.z }
