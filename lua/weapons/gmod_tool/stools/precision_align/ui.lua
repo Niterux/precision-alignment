@@ -32,7 +32,7 @@ local attachHCvar = GetConVar( PA_ .. "attachcolour_h" )
 local attachSCvar = GetConVar( PA_ .. "attachcolour_s" )
 local attachVCvar = GetConVar( PA_ .. "attachcolour_v" )
 local attachACvar = GetConVar( PA_ .. "attachcolour_a" )
-local tooltypeCvar = GetConVar( PA_ .. "tooltype" )
+local tooltypeCvar = GetConVar( PA_ .. "toolname" )
 local sizePointCvar = GetConVar( PA_ .. "size_point" )
 local sizeLineStartCvar = GetConVar( PA_ .. "size_line_start" )
 local sizeLineEndCvar = GetConVar( PA_ .. "size_line_end" )
@@ -1523,14 +1523,13 @@ function TOOL_LIST:Init()
 		self.list_tooltype:AddColumn("")
 
 		for ToolMode in PrecisionAlign.GetToolModes() do
-			self.list_tooltype:AddLine(ToolMode)
+			local Line = self.list_tooltype:AddLine(ToolMode)
+			function Line:OnSelect()
+				RunConsoleCommand( PA_ .. "toolname", ToolMode)
+			end
 		end
 
-		self.list_tooltype:SelectItem( self.list_tooltype:GetLine( tooltypeCvar:GetInt() ) )
-		self.list_tooltype.OnRowSelected = function(_, line)
-			RunConsoleCommand( PA_ .. "tooltype", tostring(line) )
-		end
-
+		self.list_tooltype:SelectItem( self.list_tooltype:GetLine( tooltypeCvar:GetString() ) )
 	self:SetSize(CPanel_Width, #self.list_tooltype:GetLines() * 17)
 end
 

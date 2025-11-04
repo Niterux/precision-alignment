@@ -25,7 +25,7 @@ TOOL.ClientConVar =
 	["edge_snap"] 			= "1",
 	["centre_snap"] 		= "1",
 	["snap_distance"] 		= "100",
-	["tooltype"]			= "1",
+	["toolname"]			= "Point - Hitpos",
 	["draw_attachments"]	= "0",
 
 	-- Construct draw sizes
@@ -253,23 +253,13 @@ function TOOL:GetClickPosition(trace)
 	local Centre_Snap = self:GetClientNumber("centre_snap") ~= 0
 	local Snap_Dist = math.max(0, self:GetClientNumber("snap_distance"))
 
-	local tooltype = self:GetClientNumber("tooltype")
+	local tooltype = self:GetClientInfo("toolname")
+	local toolmode = PrecisionAlign.ToolModes[tooltype]
 
 	if not IsValid(Phys) or not IsValid(Ent) or Ent:IsWorld() then
 		Pos = trace.HitPos
-
-	-- Coordinate Centre
-	elseif tooltype == 2 then
-		Pos = Ent:GetPos()
-
-	-- Mass Centre
-	elseif tooltype == 3 then
-		Pos = Ent:LocalToWorld(Phys:GetMassCenter())
-
-	-- BB Centre
-	elseif tooltype == 4 then
-		Pos = Ent:LocalToWorld(Ent:OBBCenter())
-
+	elseif toolmode.GetClickPosition then
+		Pos = toolmode:GetClickPosition(trace, Pos, Ent, Phys)
 	elseif Edge_Snap or Centre_Snap then
 		local HitPosL = Ent:WorldToLocal( trace.HitPos )
 		local BoxMin, BoxMax = Phys:GetAABB()
