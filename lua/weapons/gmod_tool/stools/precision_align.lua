@@ -259,7 +259,9 @@ function TOOL:GetClickPosition(trace)
 	if not IsValid(Phys) or not IsValid(Ent) or Ent:IsWorld() then
 		Pos = trace.HitPos
 	elseif toolmode.GetClickPosition then
+		PrecisionAlign.SetNextMessageTarget(self:GetOwner())
 		Pos = toolmode:GetClickPosition(trace, Pos, Ent, Phys)
+		PrecisionAlign.SetNextMessageTarget()
 	elseif Edge_Snap or Centre_Snap then
 		local HitPosL = Ent:WorldToLocal( trace.HitPos )
 		local BoxMin, BoxMax = Phys:GetAABB()
