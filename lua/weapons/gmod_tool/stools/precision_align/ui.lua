@@ -1655,40 +1655,6 @@ CPanel.plane_window = plane_window
 -- Usermessages
 --********************************************************************************************************************--
 
-
-local function select_next_point()
-	if PrecisionAlign.SelectedPoint < 9 and PrecisionAlign.Functions.construct_exists( "Point", PrecisionAlign.SelectedPoint ) then
-		PrecisionAlign.SelectedPoint = PrecisionAlign.SelectedPoint + 1
-		local dlist_points = controlpanel.Get( PA ).point_window.list_primarypoint
-		dlist_points:ClearSelection()
-		dlist_points:SelectItem( dlist_points:GetLine(PrecisionAlign.SelectedPoint) )
-		return true
-	end
-	return false
-end
-
-local function select_next_line()
-	if PrecisionAlign.SelectedLine < 9 and PrecisionAlign.Functions.construct_exists( "Line", PrecisionAlign.SelectedLine ) then
-		PrecisionAlign.SelectedLine = PrecisionAlign.SelectedLine + 1
-		local dlist_lines = controlpanel.Get( PA ).line_window.list_line
-		dlist_lines:ClearSelection()
-		dlist_lines:SelectItem( dlist_lines:GetLine(PrecisionAlign.SelectedLine) )
-		return true
-	end
-	return false
-end
-
-local function select_next_plane()
-	if PrecisionAlign.SelectedPlane < 9 and PrecisionAlign.Functions.construct_exists( "Plane", PrecisionAlign.SelectedPlane ) then
-		PrecisionAlign.SelectedPlane = PrecisionAlign.SelectedPlane + 1
-		local dlist_planes = controlpanel.Get( PA ).plane_window.list_plane
-		dlist_planes:ClearSelection()
-		dlist_planes:SelectItem( dlist_planes:GetLine(PrecisionAlign.SelectedPlane) )
-		return true
-	end
-	return false
-end
-
 -- Called when the server sends click data - used to add a new point/line
 local function umsg_click_hook()
 	local point = Vector( net.ReadFloat(), net.ReadFloat(), net.ReadFloat() )
@@ -1698,83 +1664,10 @@ local function umsg_click_hook()
 	local shift = LocalPlayer():KeyDown( IN_SPEED )
 	local alt = LocalPlayer():KeyDown( IN_WALK )
 
-	local tooltype = tooltypeCvar:GetInt()
+	local tooltype = tooltypeCvar:GetString()
+	local ToolMode = PrecisionAlign.ToolModes[tooltype]
 
-	-- Points
-	if tooltype <= 4 then
-		if shift then
-			select_next_point()
-		end
-
-		PrecisionAlign.Functions.set_point(PrecisionAlign.SelectedPoint, point)
-		-- Auto-attach to selected ent
-		if alt then
-			if PrecisionAlign.ActiveEnt then
-				PrecisionAlign.Functions.attach_point( PrecisionAlign.SelectedPoint, PrecisionAlign.ActiveEnt )
-			elseif PrecisionAlign.Points[PrecisionAlign.SelectedPoint].entity then
-				PrecisionAlign.Functions.attach_point( PrecisionAlign.SelectedPoint, nil )
-			end
-		elseif PrecisionAlign.Points[PrecisionAlign.SelectedPoint].entity ~= ent then
-			PrecisionAlign.Functions.attach_point( PrecisionAlign.SelectedPoint, ent )
-		end
-
-	-- Lines
-	elseif tooltype == 5 then
-		if shift then
-			select_next_line()
-		end
-
-		-- Alt-click will place end point
-		if alt then
-			PrecisionAlign.Functions.set_line( PrecisionAlign.SelectedLine, nil, point, nil, nil )
-		else
-			PrecisionAlign.Functions.set_line( PrecisionAlign.SelectedLine, point, nil, nil, nil )
-
-			-- Only auto-attach by start point, not end point
-			if PrecisionAlign.Functions.construct_exists( "Line", PrecisionAlign.SelectedLine ) and PrecisionAlign.Lines[PrecisionAlign.SelectedLine].entity ~= ent then
-				PrecisionAlign.Functions.attach_line( PrecisionAlign.SelectedLine, ent )
-			end
-		end
-
-	elseif tooltype == 6 then
-		if shift then
-			select_next_line()
-		end
-
-		PrecisionAlign.Functions.set_line( PrecisionAlign.SelectedLine, point, nil, normal, nil )
-		if alt then
-			if PrecisionAlign.ActiveEnt then
-				PrecisionAlign.Functions.attach_line( PrecisionAlign.SelectedLine, PrecisionAlign.ActiveEnt )
-			elseif PrecisionAlign.Lines[PrecisionAlign.SelectedLine].entity then
-				PrecisionAlign.Functions.attach_line( PrecisionAlign.SelectedLine, nil )
-			end
-		elseif PrecisionAlign.Lines[PrecisionAlign.SelectedLine].entity ~= ent then
-			PrecisionAlign.Functions.attach_line( PrecisionAlign.SelectedLine, ent )
-		end
-
-	elseif tooltype == 7 then
-		PrecisionAlign.Functions.set_line( PrecisionAlign.SelectedLine, nil, nil, normal, nil )
-
-	-- Planes
-	elseif tooltype == 8 then
-		if shift then
-			select_next_plane()
-		end
-
-		PrecisionAlign.Functions.set_plane( PrecisionAlign.SelectedPlane, point, normal )
-		if alt then
-			if PrecisionAlign.ActiveEnt then
-				PrecisionAlign.Functions.attach_plane( PrecisionAlign.SelectedPlane, PrecisionAlign.ActiveEnt )
-			elseif PrecisionAlign.Planes[PrecisionAlign.SelectedPlane].entity then
-				PrecisionAlign.Functions.attach_plane( PrecisionAlign.SelectedPlane, nil )
-			end
-		elseif PrecisionAlign.Planes[PrecisionAlign.SelectedPlane].entity ~= ent then
-			PrecisionAlign.Functions.attach_plane( PrecisionAlign.SelectedPlane, ent )
-		end
-
-	elseif tooltype == 9 then
-		PrecisionAlign.Functions.set_plane( PrecisionAlign.SelectedPlane, nil, normal )
-	end
+	ToolMode:OnClick(ent, point, normal, shift, alt)
 end
 net.Receive( PA_ .. "click", umsg_click_hook )
 

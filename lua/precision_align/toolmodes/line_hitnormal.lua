@@ -1,1 +1,5 @@
-local _ = PrecisionAlign.ToolMode(PrecisionAlign.CONSTRUCT_LINE, "Hitnormal", 2020)
+local MODE = PrecisionAlign.LineToolMode("Hitnormal", 2020)
+
+function MODE:OnClick(_, _, Normal)
+    PrecisionAlign.Functions.set_line( PrecisionAlign.SelectedLine, nil, nil, Normal, nil )
+end

@@ -1,4 +1,4 @@
-local MODE = PrecisionAlign.ToolMode(PrecisionAlign.CONSTRUCT_POINT, "Mass Centre", 1020)
+local MODE = PrecisionAlign.PointToolMode("Mass Centre", 1020)
 
 function MODE:GetClickPosition(_, _, Ent, Phys)
     return Ent:LocalToWorld(Phys:GetMassCenter())

@@ -1,4 +1,4 @@
-local MODE = PrecisionAlign.ToolMode(PrecisionAlign.CONSTRUCT_POINT, "Attachment", 1040)
+local MODE = PrecisionAlign.PointToolMode("Attachment", 1040)
 
 function MODE:GetClickPosition(_, Pos, Ent, _)
     local Attachments = Ent:GetAttachments()
