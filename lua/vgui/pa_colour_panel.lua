@@ -1,6 +1,9 @@
+local BGColor            = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR
+local BGColor_Disabled   = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_DISABLED
+
 local COLOUR_PANEL = {}
 function COLOUR_PANEL:Init()
-	self.colour = table.Copy( BGColor_Disabled )
+	self.colour = BGColor_Disabled:Copy()
 	self.setcolour = BGColor_Disabled
 	local parent = self:GetParent()
 	self:SetSize( 150, parent:GetTall() / 2 - 15 )
