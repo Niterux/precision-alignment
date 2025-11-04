@@ -6,8 +6,6 @@ if SERVER then return end
 local PA = "precision_align"
 local PA_ = PA .. "_"
 
-local showMsgsCvar = GetConVar(PA_ .. "display_messages")
-local showWarnCvar = GetConVar(PA_ .. "display_warnings")
 local selectHCvar = GetConVar(PA_ .. "selectcolour_h")
 local selectSCvar = GetConVar(PA_ .. "selectcolour_s")
 local selectVCvar = GetConVar(PA_ .. "selectcolour_v")
@@ -17,17 +15,8 @@ local attSCvar = GetConVar(PA_ .. "attachcolour_s")
 local attVCvar = GetConVar(PA_ .. "attachcolour_v")
 local attACvar = GetConVar(PA_ .. "attachcolour_a")
 
-local function Message(text)
-	if showMsgsCvar:GetInt() == 1 then
-		LocalPlayer():ChatPrint("(PA) " .. text)
-	end
-end
-
-local function Warning( text )
-	if showWarnCvar:GetInt() == 1 then
-		LocalPlayer():ChatPrint("(PA) ERROR: " .. text)
-	end
-end
+local Message = PrecisionAlign.Message
+local Warning = PrecisionAlign.Warning
 
 local function NormAng( ang )
 	local ang_temp = Angle()
@@ -2704,7 +2693,7 @@ function ROTATION_FUNCTIONS_TAB:Init()
 
 	local width = 148.3
 	local string_table = {"Line 1", "Line 2", "Plane 1", "Plane 2"}
-	local string_table2 = {"Line", "Line", "Plane", "Plane"}
+	local string_table2 = {PrecisionAlign.CONSTRUCT_LINE, PrecisionAlign.CONSTRUCT_LINE, PrecisionAlign.CONSTRUCT_PLANE, PrecisionAlign.CONSTRUCT_PLANE}
 	local selection_lists = {}
 
 	AddMenuText( "Selection", 10, 5, self )
