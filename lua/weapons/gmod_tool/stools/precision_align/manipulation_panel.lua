@@ -53,14 +53,14 @@ end
 --********************************************************************************************************************--
 
 
-local BGColor = Color(50, 50, 50, 50)
-local BGColor_Background = Color(103, 100, 110, 255)
-local BGColor_Disabled = Color(160, 160, 160, 255)
-local BGColor_Display = Color(170, 170, 170, 255)
-local BGColor_Point = Color(170, 140, 140, 255)
-local BGColor_Line = Color(140, 140, 170, 255)
-local BGColor_Plane = Color(140, 170, 140, 255)
-local BGColor_Rotation = Color(140, 170, 170, 255)
+local BGColor            = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR
+local BGColor_Background = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_BACKGROUND
+local BGColor_Disabled   = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_DISABLED
+local BGColor_Display    = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_DISPLAY
+local BGColor_Point      = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_POINT
+local BGColor_Line       = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_LINE
+local BGColor_Plane      = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_PLANE
+local BGColor_Rotation   = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_ROTATION
 
 
 local function play_sound_true()
