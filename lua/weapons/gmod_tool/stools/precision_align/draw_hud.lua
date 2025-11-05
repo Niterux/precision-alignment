@@ -10,6 +10,8 @@ local sizeLineStartCvar = GetConVar( PA_ .. "size_line_start" )
 local sizeLineEndCvar = GetConVar( PA_ .. "size_line_end" )
 local sizePlaneCvar = GetConVar( PA_ .. "size_plane" )
 local sizePlaneNormCvar = GetConVar( PA_ .. "size_plane_normal" )
+local borderSizeCvar = GetConVar( PA_ .. "border_size" )
+local lineThicknessCvar = GetConVar( PA_ .. "line_thickness" )
 
 surface.CreateFont("PA_GizmoFont", {
     font = "Arial",
@@ -95,8 +97,14 @@ local function drawLine(startX, startY, endX, endY, thickness, color, cap)
     if not endX then return end
     if not endY then return end
 
-    thickness = thickness or 1
+    thickness = math.max(1, thickness or 1)
     color = color or color_white
+
+    if thickness <= 1 then -- Thickness of 1 looks better without the mesh method.
+        surface.SetDrawColor(color.r, color.g, color.b, color.a)
+        surface.DrawLine(startX, startY, endX, endY)
+        return
+    end
 
     local x, y   = endX - startX, endY - startY
     local cx, cy = (startX + endX) / 2, (startY + endY) / 2
@@ -117,10 +125,10 @@ end
 
 local lines = {}
 local lineCount
-local linecolor, linethickness, lineborder_color, lineborder_thickness
-local function beginLineStrip(thickness, color, border_thickness, border_color)
+local linecolor, linethickness, lineborder_color
+local function beginLineStrip(thickness, color, border_color)
     lineCount = 0
-    linecolor, linethickness, lineborder_color, lineborder_thickness = color, thickness, border_color, border_thickness
+    linecolor, linethickness, lineborder_color = color, thickness, border_color
 end
 local function pushLine(sx, sy, ex, ey, thickness, color, cap)
     lineCount = lineCount + 1
@@ -138,10 +146,10 @@ local function pushLine(sx, sy, ex, ey, thickness, color, cap)
     end
 end
 local function renderLines()
-    if lineborder_color then
+    if lineborder_color and borderSizeCvar:GetFloat() > 0 then
         for i = 1, lineCount do
             local line = lines[i]
-            drawLine(line[1], line[2], line[3], line[4], line[5] and line[5] * 2 or lineborder_thickness, lineborder_color, line[7])
+            drawLine(line[1], line[2], line[3], line[4], line[5] and line[5] + borderSizeCvar:GetFloat() or linethickness + borderSizeCvar:GetFloat(), lineborder_color, line[7])
         end
     end
 
@@ -166,7 +174,7 @@ local function drawText(Distance, Text, X, Y, DistX, DistY, Color, ...)
     textMatrix:Scale(textVectorScl)
 
     cam.PushModelMatrix(textMatrix)
-        draw.SimpleTextOutlined(Text, "PA_GizmoFont", 0, 0, Color, TEXT_ALIGN_LEFT, TEXT_ALIGN_LEFT, 2, color_black)
+        draw.SimpleTextOutlined(Text, "PA_GizmoFont", 0, 0, Color, TEXT_ALIGN_LEFT, TEXT_ALIGN_LEFT, borderSizeCvar:GetFloat() >= 1 and 2 or 0, color_black)
     cam.PopModelMatrix()
 end
 
@@ -188,8 +196,8 @@ local function precision_align_draw()
                     local size = math.Clamp( point_size_max / distance, point_size_min, point_size_max )
                     local text_dist = math.Clamp(text_max / distance, text_min, text_max)
 
-                    local lineSize = math.Clamp(math.Remap(distance, text_min, text_max, 3, 1), 1, 3)
-                    beginLineStrip(lineSize, pointcolour, lineSize * 2, color_black)
+                    local lineSize = math.Clamp(math.Remap(distance, text_min, text_max, lineThicknessCvar:GetFloat(), 1), 1, lineThicknessCvar:GetFloat())
+                    beginLineStrip(lineSize, pointcolour, color_black)
                     pushLine(point.x - size, point.y, point.x + size, point.y)
                     pushLine(point.x, point.y + size, point.x, point.y - size)
 
@@ -225,8 +233,8 @@ local function precision_align_draw()
                 local size2 = math.Clamp(line_size_max / distance2, line_size_min, line_size_max)
                 local text_dist = math.Clamp(text_max / distance1, text_min, text_max)
 
-                local lineSize = math.Clamp(math.Remap(distance1, text_min, text_max, 3, 1), 1, 3)
-                beginLineStrip(lineSize, linecolour, lineSize * 2, color_black)
+                local lineSize = math.Clamp(math.Remap(distance1, text_min, text_max, lineThicknessCvar:GetFloat(), 1), 1, lineThicknessCvar:GetFloat())
+                beginLineStrip(lineSize, linecolour, color_black)
                 -- Start X
                 local normal = (endpoint - startpoint):GetNormal()
                 local dir1, dir2
@@ -306,8 +314,8 @@ local function precision_align_draw()
                     local distance = playerpos:Distance( origin )
                     local text_dist = math.Clamp(text_max / distance, text_min, text_max)
 
-                    local lineSize = math.Clamp(math.Remap(distance, text_min, text_max, 3, 1), 1, 3)
-                    beginLineStrip(lineSize, planecolour, lineSize * 2, color_black)
+                    local lineSize = math.Clamp(math.Remap(distance, text_min, text_max, lineThicknessCvar:GetFloat(), 1), 1, lineThicknessCvar:GetFloat())
+                    beginLineStrip(lineSize, planecolour, color_black)
                     pushLine( line_start.x, line_start.y, line_end.x, line_end.y )
 
                     -- Draw plane surface
