@@ -266,7 +266,9 @@ function TOOL:GetClickPosition(trace)
 		PrecisionAlign.SetNextMessageTarget()
 	end
 
-	if Pos == nil and (not IsValid(Phys) or not IsValid(Ent) or Ent:IsWorld()) then
+	if Pos then return Pos end
+
+	if not IsValid(Phys) or not IsValid(Ent) or Ent:IsWorld() then
 		Pos = trace.HitPos
 	elseif Edge_Snap or Centre_Snap then
 		local HitPosL = Ent:WorldToLocal( trace.HitPos )
@@ -482,7 +484,7 @@ local function DrawText_ToolDesc( y, curToolType )
 	surface.SetTextColor( 255, 255, 255, 255 )
 
 	local ToolMode = PrecisionAlign.ToolModes[curToolType]
-	local text = ToolMode.Name or "No tool option selected"
+	local text = ToolMode:GetName() or "No tool option selected"
 	local w = surface.GetTextSize( text )
 
 	surface.SetTextPos( 125 - w / 2, y )
