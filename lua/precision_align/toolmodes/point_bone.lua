@@ -1,6 +1,8 @@
 local MODE = PrecisionAlign.PointToolMode("Bone", 1050)
 
 function MODE:GetClickPosition(_, Pos, Ent, _)
+       if not IsValid(Ent) then return end
+
     local ClosestBone
     local ClosestBonePos
     local ClosestBoneDistance = 100000000000

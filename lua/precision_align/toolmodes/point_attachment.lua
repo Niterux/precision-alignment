@@ -1,6 +1,8 @@
 local MODE = PrecisionAlign.PointToolMode("Attachment", 1040)
 
 function MODE:GetClickPosition(_, Pos, Ent, _)
+    if not IsValid(Ent) then return end
+
     local Attachments = Ent:GetAttachments()
     local ClosestAttachment
     local ClosestAttachmentName
