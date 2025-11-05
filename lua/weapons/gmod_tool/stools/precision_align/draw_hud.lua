@@ -188,7 +188,8 @@ local function precision_align_draw()
                     local size = math.Clamp( point_size_max / distance, point_size_min, point_size_max )
                     local text_dist = math.Clamp(text_max / distance, text_min, text_max)
 
-                    beginLineStrip(3, pointcolour, 7, color_black)
+                    local lineSize = math.Clamp(math.Remap(distance, text_min, text_max, 3, 1), 1, 3)
+                    beginLineStrip(lineSize, pointcolour, lineSize * 2, color_black)
                     pushLine(point.x - size, point.y, point.x + size, point.y)
                     pushLine(point.x, point.y + size, point.x, point.y - size)
 
@@ -225,7 +226,8 @@ local function precision_align_draw()
                 local size2 = math.Clamp(line_size_max / distance2, line_size_min, line_size_max)
                 local text_dist = math.Clamp(text_max / distance1, text_min, text_max)
 
-                beginLineStrip(3, linecolour, 7, color_black)
+                local lineSize = math.Clamp(math.Remap(distance1, text_min, text_max, 3, 1), 1, 3)
+                beginLineStrip(lineSize, linecolour, lineSize * 2, color_black)
                 -- Start X
                 local normal = (endpoint - startpoint):GetNormal()
                 local dir1, dir2
@@ -306,7 +308,8 @@ local function precision_align_draw()
                     local distance = playerpos:Distance( origin )
                     local text_dist = math.Clamp(text_max / distance, text_min, text_max)
 
-                    beginLineStrip(3, planecolour, 7, color_black)
+                    local lineSize = math.Clamp(math.Remap(distance, text_min, text_max, 3, 1), 1, 3)
+                    beginLineStrip(lineSize, planecolour, lineSize * 2, color_black)
                     pushLine( line_start.x, line_start.y, line_end.x, line_end.y )
 
                     -- Draw plane surface
