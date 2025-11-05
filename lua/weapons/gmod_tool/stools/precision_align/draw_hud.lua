@@ -30,6 +30,9 @@ linecolour:SetSaturation(0.8)
 planecolour:SetBrightness(0.98)
 planecolour:SetSaturation(0.8)
 
+local planecolour_a = planecolour:Copy()
+planecolour_a.a = 255
+
 -- HUD display
 local point_size_min = math.max( sizePointCvar:GetInt(), 1 )
 local point_size_max = sizePointCvar:GetInt() * 1000
@@ -315,8 +318,6 @@ local function precision_align_draw()
                     local text_dist = math.Clamp(text_max / distance, text_min, text_max)
 
                     local lineSize = math.Clamp(math.Remap(distance, text_min, text_max, lineThicknessCvar:GetFloat(), 1), 1, lineThicknessCvar:GetFloat())
-                    beginLineStrip(lineSize, planecolour, color_black)
-                    pushLine( line_start.x, line_start.y, line_end.x, line_end.y )
 
                     -- Draw plane surface
                     local dir1, dir2
@@ -331,15 +332,26 @@ local function precision_align_draw()
                     dir2 = ( dir1:Cross( normal ) ):GetNormal() * plane_size
                     dir1 = dir1 * plane_size
 
-                    local v1 = ( origin + dir1 + dir2 ):ToScreen()
-                    local v2 = ( origin - dir1 + dir2 ):ToScreen()
-                    local v3 = ( origin - dir1 - dir2 ):ToScreen()
-                    local v4 = ( origin + dir1 - dir2 ):ToScreen()
+                    local p1 = origin + dir1 + dir2
+                    local p2 = origin - dir1 + dir2
+                    local p3 = origin - dir1 - dir2
+                    local p4 = origin + dir1 - dir2
+                    local v1 = p1:ToScreen()
+                    local v2 = p2:ToScreen()
+                    local v3 = p3:ToScreen()
+                    local v4 = p4:ToScreen()
 
+                    beginLineStrip(lineSize, planecolour, color_black)
                     pushLine( v1.x, v1.y, v2.x, v2.y, nil, nil, false )
                     pushLine( v2.x, v2.y, v3.x, v3.y, nil, nil, false )
                     pushLine( v3.x, v3.y, v4.x, v4.y, nil, nil, false )
                     pushLine( v4.x, v4.y, v1.x, v1.y, nil, nil, false )
+
+                    -- Line flush so the normal indicator overlaps correctly.
+                    renderLines()
+                    beginLineStrip(lineSize, planecolour, color_black)
+
+                    pushLine( line_start.x, line_start.y, line_end.x, line_end.y )
 
                     drawText(distance, tostring( k ), line_start.x, line_start.y, text_dist, text_dist / 1.5, Color( planecolour.r, planecolour.g, planecolour.b, planecolour.a ), 1 )
                     -- Default
