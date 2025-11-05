@@ -29,6 +29,10 @@ function PrecisionAlign.ToolMode:__new(Construct, Name, SortIndex)
     PrecisionAlign.ToolModes[self.ID] = self
 end
 
+function PrecisionAlign.ToolMode:GetName()
+    return self.Name
+end
+
 -- Not required, but this is the signature for those who wish to override the click position
 -- function PrecisionAlign.ToolMode:GetClickPosition(Trace, Pos, Ent, Phys)
 
