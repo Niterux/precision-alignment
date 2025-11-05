@@ -36,8 +36,8 @@ TOOL.ClientConVar =
 	["size_plane"]			= "10",
 	["size_plane_normal"]	= "20",
 
-	["border_size"] = "0",
-	["line_thickness"]      = "2",
+	["border_size"]         = "3",
+	["line_thickness"]      = "3",
 
 	-- Ent Selection colour
 	["selectcolour_h"]		= "230",
