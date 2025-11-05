@@ -241,6 +241,10 @@ list.Set( "PA_mirror_exceptions_specific", "models/nova/chair_office01.mdl", Ang
 list.Set( "PA_mirror_exceptions_specific", "models/nova/chair_office02.mdl", Angle(0, 0, 180) )
 list.Set( "PA_mirror_exceptions_specific", "models/nova/jeep_seat.mdl", Angle(0, 0, 180) )
 
+-- ACF
+list.Set( "PA_mirror_exceptions_specific", "models/chairs_playerstart/sitpose.mdl", Angle(0, 0, 180) )
+list.Set( "PA_mirror_exceptions_specific", "models/chairs_playerstart/standingpose.mdl", Angle(0, 0, 180) )
+
 list.Set( "PA_mirror_exceptions", "models/hunter/tubes/tubebend", Angle(180, 0, -90) )
 list.Set( "PA_mirror_exceptions", "models/hunter/plates/tri", Angle(0, 0, 180) )
 list.Set( "PA_mirror_exceptions", "models/xqm/quad", Angle(0, 180, 0) )
