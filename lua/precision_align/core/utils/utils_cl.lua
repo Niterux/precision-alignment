@@ -3,7 +3,7 @@ local PA_ = PrecisionAlign.PA_
 
 PrecisionAlign = PrecisionAlign or {}
 PrecisionAlign.Functions = PrecisionAlign.Functions or {}
-PrecisionAlign.Version = 10
+PrecisionAlign.Version = 11
 
 PrecisionAlign.Points = {}
 PrecisionAlign.Lines = {}
