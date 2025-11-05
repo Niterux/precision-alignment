@@ -11,6 +11,12 @@ local sizeLineEndCvar = GetConVar( PA_ .. "size_line_end" )
 local sizePlaneCvar = GetConVar( PA_ .. "size_plane" )
 local sizePlaneNormCvar = GetConVar( PA_ .. "size_plane_normal" )
 
+surface.CreateFont("PA_GizmoFont", {
+    font = "Arial",
+    size = ScrW() / 60,
+    weight = 900,
+})
+
 local pointcolour = PrecisionAlign.GetConstructColor(PrecisionAlign.CONSTRUCT_POINT):Copy()
 local linecolour  = PrecisionAlign.GetConstructColor(PrecisionAlign.CONSTRUCT_LINE):Copy()
 local planecolour = PrecisionAlign.GetConstructColor(PrecisionAlign.CONSTRUCT_PLANE):Copy()
@@ -32,7 +38,7 @@ local line_size_max = line_size_min * 1000
 
 local plane_size = sizePlaneCvar:GetInt()
 local plane_size_normal = sizePlaneNormCvar:GetInt()
-local text_min, text_max = 1, 4500
+local text_min, text_max = 1, 3500
 
 local draw_attachments = LocalPlayer():GetInfo( PA_ .. "draw_attachments" )
 
@@ -82,6 +88,88 @@ local function inview( pos2D )
     return false
 end
 
+local v1, v2 = Vector(), Vector()
+local function drawLine(startX, startY, endX, endY, thickness, color, cap)
+    if not startX then return end
+    if not startY then return end
+    if not endX then return end
+    if not endY then return end
+
+    thickness = thickness or 1
+    color = color or color_white
+
+    local x, y   = endX - startX, endY - startY
+    local cx, cy = (startX + endX) / 2, (startY + endY) / 2
+    local dist   = (math.sqrt((x^2) + (y^2))) + (cap == false and 0 or thickness * 1.5)
+
+    local a      = -math.atan2(y, x)
+    local s, c   = math.sin(a), math.cos(a)
+
+    v1:SetUnpacked(cx, cy, 0)
+    v2:SetUnpacked(s, c, -thickness)
+    render.SetColorMaterial()
+    mesh.Begin(MATERIAL_QUADS, 1)
+    xpcall(function()
+        mesh.QuadEasy(v1, v2, dist, thickness, color)
+        mesh.End()
+    end, function() mesh.End() print(debug.traceback(err)) end)
+end
+
+local lines = {}
+local lineCount
+local linecolor, linethickness, lineborder_color, lineborder_thickness
+local function beginLineStrip(thickness, color, border_thickness, border_color)
+    lineCount = 0
+    linecolor, linethickness, lineborder_color, lineborder_thickness = color, thickness, border_color, border_thickness
+end
+local function pushLine(sx, sy, ex, ey, cap)
+    lineCount = lineCount + 1
+    if not lines[lineCount] then
+        lines[lineCount] = {sx, sy, ex, ey, linethickness, linecolor, cap}
+    else
+        local tbl = lines[lineCount]
+        tbl[1] = sx
+        tbl[2] = sy
+        tbl[3] = ex
+        tbl[4] = ey
+        tbl[5] = linethickness
+        tbl[6] = linecolor
+        tbl[7] = cap
+    end
+end
+local function renderLines()
+    if lineborder_color then
+        for i = 1, lineCount do
+            local line = lines[i]
+            drawLine(line[1], line[2], line[3], line[4], lineborder_thickness, lineborder_color, line[7])
+        end
+    end
+
+    for i = 1, lineCount do
+        local line = lines[i]
+        drawLine(unpack(line))
+    end
+end
+
+local textMatrix    = Matrix()
+local textVectorTrn = Vector()
+local textVectorScl = Vector()
+local function drawText(Distance, Text, X, Y, DistX, DistY, Color, ...)
+    local Dist = math.Clamp(Distance * 9, text_min, text_max)
+    local Sc   = math.Round(math.Remap(Dist, text_min, text_max, 1, 0.5) * 50) / 50
+
+    textVectorTrn:SetUnpacked(math.Remap(Dist, text_max, text_min, X, X + DistX), math.Remap(Dist, text_max, text_min, Y, Y + DistY), 0)
+    textVectorScl:SetUnpacked(Sc, Sc, 1)
+
+    textMatrix:Identity()
+    textMatrix:Translate(textVectorTrn)
+    textMatrix:Scale(textVectorScl)
+
+    cam.PushModelMatrix(textMatrix)
+        draw.SimpleTextOutlined(Text, "PA_GizmoFont", 0, 0, Color, TEXT_ALIGN_LEFT, TEXT_ALIGN_LEFT, 2, color_black)
+    cam.PopModelMatrix()
+end
+
 -- HUD draw function
 local function precision_align_draw()
     local playerpos = LocalPlayer():GetShootPos()
@@ -100,19 +188,19 @@ local function precision_align_draw()
                     local size = math.Clamp( point_size_max / distance, point_size_min, point_size_max )
                     local text_dist = math.Clamp(text_max / distance, text_min, text_max)
 
-                    surface.SetDrawColor( pointcolour.r, pointcolour.g, pointcolour.b, pointcolour.a )
+                    beginLineStrip(3, pointcolour, 7, color_black)
+                    pushLine(point.x - size, point.y, point.x + size, point.y)
+                    pushLine(point.x, point.y + size, point.x, point.y - size)
 
-                    surface.DrawLine( point.x - size, point.y, point.x + size, point.y )
-                    surface.DrawLine( point.x, point.y + size, point.x, point.y - size )
-
-                    draw.DrawText( tostring(k), "Default", point.x + text_dist, point.y + text_dist / 1.5, Color(pointcolour.r, pointcolour.g, pointcolour.b, pointcolour.a), 0 )
+                    drawText(distance, tostring(k), point.x, point.y, text_dist, text_dist / 1.5, pointcolour, 0)
 
                     -- Draw attachment line
                     if draw_attachments and IsValid(v.entity) then
                         local entpos = v.entity:GetPos():ToScreen()
-                        surface.SetDrawColor( attachcolourRGB.r, attachcolourRGB.g, attachcolourRGB.b, attachcolourRGB.a )
-                        surface.DrawLine( point.x, point.y, entpos.x, entpos.y )
+                        surface.SetDrawColor( attachcolourRGB.r, attachcolourRGB.g, attachcolourRGB.b, attachcolourRGB.a)
+                        pushLine(point.x, point.y, entpos.x, entpos.y)
                     end
+                    renderLines()
                 end
             end
         end
@@ -137,8 +225,7 @@ local function precision_align_draw()
                 local size2 = math.Clamp(line_size_max / distance2, line_size_min, line_size_max)
                 local text_dist = math.Clamp(text_max / distance1, text_min, text_max)
 
-                surface.SetDrawColor( linecolour.r, linecolour.g, linecolour.b, linecolour.a )
-
+                beginLineStrip(3, linecolour, 7, color_black)
                 -- Start X
                 local normal = (endpoint - startpoint):GetNormal()
                 local dir1, dir2
@@ -168,31 +255,33 @@ local function precision_align_draw()
 
                 -- Start X
                 if inview( line_start ) then
-                    surface.DrawLine(v1.x, v1.y, v3.x, v3.y)
-                    surface.DrawLine(v2.x, v2.y, v4.x, v4.y)
+                    pushLine(v1.x, v1.y, v3.x, v3.y)
+                    pushLine(v2.x, v2.y, v4.x, v4.y)
                 end
 
                 -- Line
-                surface.DrawLine( line_start.x, line_start.y, line_end.x, line_end.y )
+                pushLine( line_start.x, line_start.y, line_end.x, line_end.y, false )
 
                 -- End =
                 if inview( line_end ) then
                     local line_dir_2D = Vector(line_end.x - line_start.x, line_end.y - line_start.y, 0):GetNormalized()
                     local norm_dir_2D = {x = -line_dir_2D.y, y = line_dir_2D.x}
-                    surface.DrawLine( line_end.x - norm_dir_2D.x * size2, line_end.y - norm_dir_2D.y * size2,
+                    pushLine( line_end.x - norm_dir_2D.x * size2, line_end.y - norm_dir_2D.y * size2,
                                     line_end.x + norm_dir_2D.x * size2, line_end.y + norm_dir_2D.y * size2 )
-                    surface.DrawLine( line_end.x + (line_dir_2D.x / 3 - norm_dir_2D.x) * size2, line_end.y + (line_dir_2D.y / 3 - norm_dir_2D.y) * size2,
+                    pushLine( line_end.x + (line_dir_2D.x / 3 - norm_dir_2D.x) * size2, line_end.y + (line_dir_2D.y / 3 - norm_dir_2D.y) * size2,
                                     line_end.x + (line_dir_2D.x / 3 + norm_dir_2D.x) * size2, line_end.y + (line_dir_2D.y / 3 + norm_dir_2D.y) * size2 )
                 end
 
-                draw.DrawText( tostring(k), "Default", line_start.x + text_dist, line_start.y - text_dist / 1.5 - 15, Color(linecolour.r, linecolour.g, linecolour.b, linecolour.a), 3 )
+                drawText(distance1, tostring(k), line_start.x, line_start.y, text_dist, text_dist / 1.5 - 15, Color(linecolour.r, linecolour.g, linecolour.b, linecolour.a), 3 )
 
                 -- Draw attachment line
                 if draw_attachments and IsValid(v.entity) then
                     local entpos = v.entity:GetPos():ToScreen()
                     surface.SetDrawColor( attachcolourRGB.r, attachcolourRGB.g, attachcolourRGB.b, attachcolourRGB.a )
-                    surface.DrawLine( line_start.x, line_start.y, entpos.x, entpos.y )
+                    pushLine( line_start.x, line_start.y, entpos.x, entpos.y )
                 end
+
+                renderLines()
             end
         end
     end
@@ -217,8 +306,8 @@ local function precision_align_draw()
                     local distance = playerpos:Distance( origin )
                     local text_dist = math.Clamp(text_max / distance, text_min, text_max)
 
-                    surface.SetDrawColor( planecolour.r, planecolour.g, planecolour.b, planecolour.a )
-                    surface.DrawLine( line_start.x, line_start.y, line_end.x, line_end.y )
+                    beginLineStrip(3, planecolour, 7, color_black)
+                    pushLine( line_start.x, line_start.y, line_end.x, line_end.y )
 
                     -- Draw plane surface
                     local dir1, dir2
@@ -238,19 +327,21 @@ local function precision_align_draw()
                     local v3 = ( origin - dir1 - dir2 ):ToScreen()
                     local v4 = ( origin + dir1 - dir2 ):ToScreen()
 
-                    surface.DrawLine( v1.x, v1.y, v2.x, v2.y )
-                    surface.DrawLine( v2.x, v2.y, v3.x, v3.y )
-                    surface.DrawLine( v3.x, v3.y, v4.x, v4.y )
-                    surface.DrawLine( v4.x, v4.y, v1.x, v1.y )
+                    pushLine( v1.x, v1.y, v2.x, v2.y, false )
+                    pushLine( v2.x, v2.y, v3.x, v3.y, false )
+                    pushLine( v3.x, v3.y, v4.x, v4.y, false )
+                    pushLine( v4.x, v4.y, v1.x, v1.y, false )
 
-                    draw.DrawText( tostring( k ), "Default", line_start.x - text_dist, line_start.y + text_dist / 1.5, Color( planecolour.r, planecolour.g, planecolour.b, planecolour.a ), 1 )
+                    drawText(distance, tostring( k ), line_start.x, line_start.y, text_dist, text_dist / 1.5, Color( planecolour.r, planecolour.g, planecolour.b, planecolour.a ), 1 )
                     -- Default
                     -- Draw attachment line
                     if draw_attachments and IsValid(v.entity) then
                         local entpos = v.entity:GetPos():ToScreen()
                         surface.SetDrawColor( attachcolourRGB.r, attachcolourRGB.g, attachcolourRGB.b, attachcolourRGB.a )
-                        surface.DrawLine( line_start.x, line_start.y, entpos.x, entpos.y )
+                        pushLine( line_start.x, line_start.y, entpos.x, entpos.y )
                     end
+
+                    renderLines()
                 end
             end
         end
