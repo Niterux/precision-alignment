@@ -122,7 +122,7 @@ local function beginLineStrip(thickness, color, border_thickness, border_color)
     lineCount = 0
     linecolor, linethickness, lineborder_color, lineborder_thickness = color, thickness, border_color, border_thickness
 end
-local function pushLine(sx, sy, ex, ey, cap)
+local function pushLine(sx, sy, ex, ey, thickness, color, cap)
     lineCount = lineCount + 1
     if not lines[lineCount] then
         lines[lineCount] = {sx, sy, ex, ey, linethickness, linecolor, cap}
@@ -132,8 +132,8 @@ local function pushLine(sx, sy, ex, ey, cap)
         tbl[2] = sy
         tbl[3] = ex
         tbl[4] = ey
-        tbl[5] = linethickness
-        tbl[6] = linecolor
+        tbl[5] = thickness or linethickness
+        tbl[6] = color or linecolor
         tbl[7] = cap
     end
 end
@@ -141,7 +141,7 @@ local function renderLines()
     if lineborder_color then
         for i = 1, lineCount do
             local line = lines[i]
-            drawLine(line[1], line[2], line[3], line[4], lineborder_thickness, lineborder_color, line[7])
+            drawLine(line[1], line[2], line[3], line[4], line[5] and line[5] * 2 or lineborder_thickness, lineborder_color, line[7])
         end
     end
 
@@ -198,8 +198,7 @@ local function precision_align_draw()
                     -- Draw attachment line
                     if draw_attachments and IsValid(v.entity) then
                         local entpos = v.entity:GetPos():ToScreen()
-                        surface.SetDrawColor( attachcolourRGB.r, attachcolourRGB.g, attachcolourRGB.b, attachcolourRGB.a)
-                        pushLine(point.x, point.y, entpos.x, entpos.y)
+                        pushLine(point.x, point.y, entpos.x, entpos.y, 2, attachcolourRGB)
                     end
                     renderLines()
                 end
@@ -262,7 +261,7 @@ local function precision_align_draw()
                 end
 
                 -- Line
-                pushLine( line_start.x, line_start.y, line_end.x, line_end.y, false )
+                pushLine( line_start.x, line_start.y, line_end.x, line_end.y, nil, nil, false )
 
                 -- End =
                 if inview( line_end ) then
@@ -279,8 +278,7 @@ local function precision_align_draw()
                 -- Draw attachment line
                 if draw_attachments and IsValid(v.entity) then
                     local entpos = v.entity:GetPos():ToScreen()
-                    surface.SetDrawColor( attachcolourRGB.r, attachcolourRGB.g, attachcolourRGB.b, attachcolourRGB.a )
-                    pushLine( line_start.x, line_start.y, entpos.x, entpos.y )
+                    pushLine( line_start.x, line_start.y, entpos.x, entpos.y, 2, attachcolourRGB )
                 end
 
                 renderLines()
@@ -330,18 +328,17 @@ local function precision_align_draw()
                     local v3 = ( origin - dir1 - dir2 ):ToScreen()
                     local v4 = ( origin + dir1 - dir2 ):ToScreen()
 
-                    pushLine( v1.x, v1.y, v2.x, v2.y, false )
-                    pushLine( v2.x, v2.y, v3.x, v3.y, false )
-                    pushLine( v3.x, v3.y, v4.x, v4.y, false )
-                    pushLine( v4.x, v4.y, v1.x, v1.y, false )
+                    pushLine( v1.x, v1.y, v2.x, v2.y, nil, nil, false )
+                    pushLine( v2.x, v2.y, v3.x, v3.y, nil, nil, false )
+                    pushLine( v3.x, v3.y, v4.x, v4.y, nil, nil, false )
+                    pushLine( v4.x, v4.y, v1.x, v1.y, nil, nil, false )
 
                     drawText(distance, tostring( k ), line_start.x, line_start.y, text_dist, text_dist / 1.5, Color( planecolour.r, planecolour.g, planecolour.b, planecolour.a ), 1 )
                     -- Default
                     -- Draw attachment line
                     if draw_attachments and IsValid(v.entity) then
                         local entpos = v.entity:GetPos():ToScreen()
-                        surface.SetDrawColor( attachcolourRGB.r, attachcolourRGB.g, attachcolourRGB.b, attachcolourRGB.a )
-                        pushLine( line_start.x, line_start.y, entpos.x, entpos.y )
+                        pushLine( line_start.x, line_start.y, entpos.x, entpos.y, 2, attachcolourRGB )
                     end
 
                     renderLines()
