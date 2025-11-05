@@ -269,6 +269,10 @@ local function precision_align_draw()
                 if inview( line_start ) then
                     pushLine(v1.x, v1.y, v3.x, v3.y)
                     pushLine(v2.x, v2.y, v4.x, v4.y)
+
+                    -- Line flush
+                    renderLines()
+                    beginLineStrip(lineSize, linecolour, color_black)
                 end
 
                 -- Line
