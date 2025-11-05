@@ -458,6 +458,37 @@ do
 
             if not PrecisionAlign.Functions.move_entity(point1.origin, point2.origin, PrecisionAlign.ActiveEnt) then return false end
         end)
+
+        local AnimStart
+        local function DrawMoveEntity()
+            local FirstPoint  = Points.list_primarypoint:GetSelectedLine()
+            local SecondPoint = Points.list_secondarypoint:GetSelectedLine()
+            if FirstPoint == SecondPoint then return end
+
+            local Point1 = PrecisionAlign.Functions.point_global(FirstPoint)
+            local Point2 = PrecisionAlign.Functions.point_global(SecondPoint)
+            if not IsValid(PrecisionAlign.ActiveEnt) then return end
+
+            local duration = 1
+            local animTime = ((RealTime() - AnimStart) % duration) / duration
+
+            local startPos = Point1.origin
+            local endPos   = Point2.origin
+            local offset   = LerpVector(math.ease.OutExpo(animTime), startPos, endPos) - startPos
+            PrecisionAlign.ActiveEnt:SetRenderOrigin(PrecisionAlign.ActiveEnt:GetPos() + offset)
+            PrecisionAlign.ActiveEnt:SetupBones()
+            local Blend = render.GetBlend() render.SetBlend(math.ease.InCubic(1 - animTime) / 2)
+            PrecisionAlign.ActiveEnt:DrawModel()
+            PrecisionAlign.ActiveEnt:SetRenderOrigin(nil)
+            PrecisionAlign.ActiveEnt:SetupBones()
+            render.SetBlend(Blend)
+        end
+        MoveEntity:SetHoverFunction(function() end, function(_, Time)
+            AnimStart = Time
+            hook.Add("PostDrawTranslucentRenderables", MoveEntity, DrawMoveEntity)
+        end, function()
+            hook.Remove("PostDrawTranslucentRenderables", MoveEntity)
+        end)
     end
     local Lines  = vgui.Create("PA_Tool_Construct_Panel")
     CPanel.line_window = Lines
