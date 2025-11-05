@@ -468,6 +468,8 @@ do
             local Point1 = PrecisionAlign.Functions.point_global(FirstPoint)
             local Point2 = PrecisionAlign.Functions.point_global(SecondPoint)
             if not IsValid(PrecisionAlign.ActiveEnt) then return end
+            if not Point1 then return end
+            if not Point2 then return end
 
             local duration = 1
             local animTime = ((RealTime() - AnimStart) % duration) / duration
