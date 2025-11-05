@@ -146,15 +146,15 @@ end
 PrecisionAlign.Functions.construct_exists = function( construct_type, ID )
 	if not construct_type or not ID then return false end
 
-	if construct_type == "Point" then
+	if construct_type == PrecisionAlign.CONSTRUCT_POINT then
 		if PrecisionAlign.Points[ID].origin then
 			return true
 		end
-	elseif construct_type == "Line" then
+	elseif construct_type == PrecisionAlign.CONSTRUCT_LINE then
 		if PrecisionAlign.Lines[ID].startpoint and PrecisionAlign.Lines[ID].endpoint then
 			return true
 		end
-	elseif construct_type == "Plane" then
+	elseif construct_type == PrecisionAlign.CONSTRUCT_PLANE then
 		if PrecisionAlign.Planes[ID].origin and PrecisionAlign.Planes[ID].normal then
 			return true
 		end
@@ -388,7 +388,7 @@ PrecisionAlign.Functions.set_line = function( line, startpoint, endpoint, direct
 		local len
 		if not length then
 			--Check to see whether line already exists, if so use that length
-			if PrecisionAlign.Functions.construct_exists( "Line", line ) then
+			if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, line ) then
 				len = startpoint_old:Distance( PrecisionAlign.Lines[line].endpoint )
 			else
 				len = lengthCvar:GetInt()
@@ -470,7 +470,7 @@ PrecisionAlign.Functions.attach_line = function( line, ent )
 end
 
 PrecisionAlign.Functions.line_function_perpendicular = function( lineID1, lineID2 )
-	if PrecisionAlign.Functions.construct_exists( "Line", lineID1 ) and PrecisionAlign.Functions.construct_exists( "Line", lineID2 ) then
+	if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, lineID1 ) and PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, lineID2 ) then
 		local line1 = PrecisionAlign.Functions.line_global(lineID1)
 		local line2 = PrecisionAlign.Functions.line_global(lineID2)
 		local dir1 = line1.endpoint - line1.startpoint
@@ -623,7 +623,7 @@ PrecisionAlign.Functions.attach_plane = function( plane, ent )
 end
 
 PrecisionAlign.Functions.plane_function_perpendicular = function( planeID1, planeID2 )
-	if PrecisionAlign.Functions.construct_exists( "Plane", planeID1 ) and PrecisionAlign.Functions.construct_exists( "Plane", planeID2 ) then
+	if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_PLANE, planeID1 ) and PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_PLANE, planeID2 ) then
 		local plane1 = PrecisionAlign.Functions.plane_global(planeID1)
 		local plane2 = PrecisionAlign.Functions.plane_global(planeID2)
 

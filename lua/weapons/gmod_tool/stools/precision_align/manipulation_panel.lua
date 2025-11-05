@@ -6,8 +6,6 @@ if SERVER then return end
 local PA = "precision_align"
 local PA_ = PA .. "_"
 
-local showMsgsCvar = GetConVar(PA_ .. "display_messages")
-local showWarnCvar = GetConVar(PA_ .. "display_warnings")
 local selectHCvar = GetConVar(PA_ .. "selectcolour_h")
 local selectSCvar = GetConVar(PA_ .. "selectcolour_s")
 local selectVCvar = GetConVar(PA_ .. "selectcolour_v")
@@ -17,17 +15,8 @@ local attSCvar = GetConVar(PA_ .. "attachcolour_s")
 local attVCvar = GetConVar(PA_ .. "attachcolour_v")
 local attACvar = GetConVar(PA_ .. "attachcolour_a")
 
-local function Message(text)
-	if showMsgsCvar:GetInt() == 1 then
-		LocalPlayer():ChatPrint("(PA) " .. text)
-	end
-end
-
-local function Warning( text )
-	if showWarnCvar:GetInt() == 1 then
-		LocalPlayer():ChatPrint("(PA) ERROR: " .. text)
-	end
-end
+local Message = PrecisionAlign.Message
+local Warning = PrecisionAlign.Warning
 
 local function NormAng( ang )
 	local ang_temp = Angle()
@@ -53,24 +42,14 @@ end
 --********************************************************************************************************************--
 
 
-local BGColor = Color(50, 50, 50, 50)
-local BGColor_Background = Color(103, 100, 110, 255)
-local BGColor_Disabled = Color(160, 160, 160, 255)
-local BGColor_Display = Color(170, 170, 170, 255)
-local BGColor_Point = Color(170, 140, 140, 255)
-local BGColor_Line = Color(140, 140, 170, 255)
-local BGColor_Plane = Color(140, 170, 140, 255)
-local BGColor_Rotation = Color(140, 170, 170, 255)
-
-
-local function play_sound_true()
-	LocalPlayer():EmitSound("buttons/button15.wav", 100, 100)
-end
---[[
-local function play_sound_false()
-	LocalPlayer():EmitSound("buttons/lightswitch2.wav", 100, 100)
-end
-]]
+local BGColor            = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR
+local BGColor_Background = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_BACKGROUND
+local BGColor_Disabled   = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_DISABLED
+local BGColor_Display    = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_DISPLAY
+local BGColor_Point      = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_POINT
+local BGColor_Line       = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_LINE
+local BGColor_Plane      = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_PLANE
+local BGColor_Rotation   = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_ROTATION
 
 
 local MANIPULATION_FRAME = {}
@@ -409,13 +388,13 @@ function POINTS_TAB:Init()
 	end
 
 	self.list_primarypoint = vgui.Create( "PA_Construct_ListView", self )
-		self.list_primarypoint:Text( "Primary", "Point", self )
+		self.list_primarypoint:Text( "Primary", PrecisionAlign.CONSTRUCT_POINT, self )
 		self.list_primarypoint:SetTooltip( "Double click to update sliders" )
 		self.list_primarypoint:SetPos(15, 30)
 		self.list_primarypoint:SetMultiSelect(false)
 		self.list_primarypoint.DoDoubleClick = function()
 			update_primary_listview()
-			play_sound_true()
+			PrecisionAlign.PlaySoundTrue()
 		end
 
 	self.checkbox_relative1 = vgui.Create( "DCheckBoxLabel", self )
@@ -508,12 +487,12 @@ function POINTS_TAB:Init()
 
 
 	self.list_secondarypoint = vgui.Create( "PA_Construct_ListView", self )
-		self.list_secondarypoint:Text( "Secondary", "Point", self )
+		self.list_secondarypoint:Text( "Secondary", PrecisionAlign.CONSTRUCT_POINT, self )
 		self.list_secondarypoint:SetPos(765, 30)
 		self.list_secondarypoint:SetMultiSelect(false)
 		self.list_secondarypoint.DoDoubleClick = function()
 			update_secondary_listview()
-			play_sound_true()
+			PrecisionAlign.PlaySoundTrue()
 		end
 
 
@@ -610,7 +589,7 @@ function POINTS_TAB:Init()
 
 	self.functions_list_functionpoints = vgui.Create( "PA_Construct_ListView", self )
 		self.functions_list_functionpoints:SetPos(15, 250)
-		self.functions_list_functionpoints:Text( "Function Selection", "Point", self )
+		self.functions_list_functionpoints:Text( "Function Selection", PrecisionAlign.CONSTRUCT_POINT, self )
 		self.functions_list_functionpoints.OnRowSelected = function()
 		end
 
@@ -631,7 +610,7 @@ function POINTS_TAB:Init()
 			local selection = self.functions_list_functionpoints:GetSelected()
 			if #selection == 1 then
 				local pointID = selection[1]:GetID()
-				if PrecisionAlign.Functions.construct_exists( "Point", pointID ) then
+				if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, pointID ) then
 					local point = PrecisionAlign.Functions.point_global(pointID)
 					self.sliders_origin1:SetValues(point.origin)
 					return true
@@ -770,13 +749,13 @@ function LINES_TAB:Init()
 
 
 	self.list_primary = vgui.Create( "PA_Construct_ListView", self )
-		self.list_primary:Text( "Primary", "Line", self )
+		self.list_primary:Text( "Primary", PrecisionAlign.CONSTRUCT_LINE, self )
 		self.list_primary:SetTooltip( "Double click to update sliders" )
 		self.list_primary:SetPos(15, 30)
 		self.list_primary:SetMultiSelect(false)
 		self.list_primary.DoDoubleClick = function()
 			update_primary_listview()
-			play_sound_true()
+			PrecisionAlign.PlaySoundTrue()
 		end
 
 	self.button_set = vgui.Create( "PA_Function_Button", self )
@@ -964,7 +943,7 @@ function LINES_TAB:Init()
 	AddMenuText( "Line Functions", 10, self:GetTall() / 2 - 10, self )
 
 	self.functions_list_functionlines = vgui.Create( "PA_Construct_ListView", self )
-		self.functions_list_functionlines:Text( "Function Selection", "Line" )
+		self.functions_list_functionlines:Text( "Function Selection", PrecisionAlign.CONSTRUCT_LINE )
 		self.functions_list_functionlines:SetPos(15, 250)
 		self.functions_list_functionlines.OnRowSelected = function()
 		end
@@ -996,7 +975,7 @@ function LINES_TAB:Init()
 		local selection = self.functions_list_functionlines:GetSelected()
 		if #selection == 1 then
 			local lineID = selection[1]:GetID()
-			if PrecisionAlign.Functions.construct_exists( "Line", lineID ) then
+			if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, lineID ) then
 				local line = PrecisionAlign.Functions.line_global(lineID)
 				return line
 			end
@@ -1110,7 +1089,7 @@ function LINES_TAB:Init()
 
 			for _, v in pairs(selection) do
 				lineID = v:GetID()
-				if PrecisionAlign.Functions.construct_exists( "Line", lineID ) then
+				if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, lineID ) then
 					line = PrecisionAlign.Functions.line_global( lineID )
 					totalvec = totalvec + line.endpoint - line.startpoint
 				end
@@ -1133,7 +1112,7 @@ function LINES_TAB:Init()
 				return false
 			end
 
-			if not PrecisionAlign.Functions.construct_exists( "Line", selection ) then
+			if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, selection ) then
 				Warning("Line not correctly defined")
 				return false
 			end
@@ -1218,13 +1197,13 @@ function PLANES_TAB:Init()
 
 
 	self.list_primary = vgui.Create( "PA_Construct_ListView", self )
-		self.list_primary:Text( "Primary", "Plane", self )
+		self.list_primary:Text( "Primary", PrecisionAlign.CONSTRUCT_PLANE, self )
 		self.list_primary:SetTooltip( "Double click to update sliders" )
 		self.list_primary:SetPos(15, 30)
 		self.list_primary:SetMultiSelect(false)
 		self.list_primary.DoDoubleClick = function()
 			update_primary_listview()
-			play_sound_true()
+			PrecisionAlign.PlaySoundTrue()
 		end
 
 
@@ -1346,7 +1325,7 @@ function PLANES_TAB:Init()
 		local selection = self.functions_list_functionplanes:GetSelected()
 		if #selection == 1 then
 			local planeID = selection[1]:GetID()
-			if PrecisionAlign.Functions.construct_exists( "Plane", planeID ) then
+			if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_PLANE, planeID ) then
 				local plane = PrecisionAlign.Functions.plane_global(planeID)
 				return plane
 			end
@@ -1359,7 +1338,7 @@ function PLANES_TAB:Init()
 	AddMenuText( "Plane Functions", 10, self:GetTall() / 2 - 10, self )
 
 	self.functions_list_functionplanes = vgui.Create( "PA_Construct_ListView", self )
-		self.functions_list_functionplanes:Text( "Function Selection", "Plane" )
+		self.functions_list_functionplanes:Text( "Function Selection", PrecisionAlign.CONSTRUCT_PLANE )
 		self.functions_list_functionplanes:SetPos(15, 250)
 		self.functions_list_functionplanes.OnRowSelected = function()
 		end
@@ -1450,7 +1429,7 @@ function MOVE_TAB:Init()
 	AddMenuText( "Rotate Around Axis", 575, 5, self )
 
 	self.list_line_axis = vgui.Create( "PA_Construct_ListView", self )
-		self.list_line_axis:Text( "Axis Selection", "Line", self )
+		self.list_line_axis:Text( "Axis Selection", PrecisionAlign.CONSTRUCT_LINE, self )
 		self.list_line_axis:SetPos(585, 30)
 		self.list_line_axis:SetMultiSelect(false)
 
@@ -1536,7 +1515,7 @@ function MOVE_TAB:Init()
 				return false
 			end
 
-			if not PrecisionAlign.Functions.construct_exists( "Line", selected_line ) then
+			if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, selected_line ) then
 				Warning("Line not correctly defined")
 				return false
 			end
@@ -1558,7 +1537,7 @@ function MOVE_TAB:Init()
 			-- Check pivot selection
 			local pivot_selection = self.list_pivotpoint:GetSelectedLine()
 			local pivot = line.startpoint
-			if pivot_selection and PrecisionAlign.Functions.construct_exists( "Point", pivot_selection ) then
+			if pivot_selection and PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, pivot_selection ) then
 				pivot = PrecisionAlign.Functions.point_global( pivot_selection ).origin
 			end
 
@@ -1581,7 +1560,7 @@ function MOVE_TAB:Init()
 	AddMenuText( "Move Constructs", 10, 5, self.colour_panel_1 )
 
 	self.list_point_1 = vgui.Create( "PA_Construct_ListView", self.colour_panel_1 )
-		self.list_point_1:Text( "Point 1 Selection", "Point", self.colour_panel_1 )
+		self.list_point_1:Text( "Point 1 Selection", PrecisionAlign.CONSTRUCT_POINT, self.colour_panel_1 )
 		self.list_point_1:SetPos(20, 30)
 		self.list_point_1:SetMultiSelect(false)
 		self.list_point_1:SetVisible(false)
@@ -1591,19 +1570,19 @@ function MOVE_TAB:Init()
 		self.colour_panel_2:SetPos(150, 220)
 
 	self.list_point_2 = vgui.Create( "PA_Construct_ListView", self.colour_panel_2 )
-		self.list_point_2:Text( "Point 2 Selection", "Point", self.colour_panel_2 )
+		self.list_point_2:Text( "Point 2 Selection", PrecisionAlign.CONSTRUCT_POINT, self.colour_panel_2 )
 		self.list_point_2:SetPos(20, 30)
 		self.list_point_2:SetMultiSelect(false)
 		self.list_point_2:SetVisible(false)
 
 	self.list_line_1 = vgui.Create( "PA_Construct_ListView", self.colour_panel_2 )
-		self.list_line_1:Text( "Line Selection", "Line", self.colour_panel_2 )
+		self.list_line_1:Text( "Line Selection", PrecisionAlign.CONSTRUCT_LINE, self.colour_panel_2 )
 		self.list_line_1:SetPos(20, 30)
 		self.list_line_1:SetMultiSelect(false)
 		self.list_line_1:SetVisible(false)
 
 	self.list_plane_1 = vgui.Create( "PA_Construct_ListView", self.colour_panel_2 )
-		self.list_plane_1:Text( "Plane Selection", "Plane", self.colour_panel_2 )
+		self.list_plane_1:Text( "Plane Selection", PrecisionAlign.CONSTRUCT_PLANE, self.colour_panel_2 )
 		self.list_plane_1:SetPos(20, 30)
 		self.list_plane_1:SetMultiSelect(false)
 		self.list_plane_1:SetVisible(false)
@@ -1629,9 +1608,9 @@ function MOVE_TAB:Init()
 					Warning( "Select Point 1" ) return false
 				elseif not point2 then
 					Warning( "Select Point 2" ) return false
-				elseif not PrecisionAlign.Functions.construct_exists( "Point", point1 ) then
+				elseif not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, point1 ) then
 					Warning( "Point " .. tostring(point1) .. " not defined" ) return false
-				elseif not PrecisionAlign.Functions.construct_exists( "Point", point2 ) then
+				elseif not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, point2 ) then
 					Warning( "Point " .. tostring(point2) .. " not defined" ) return false
 				end
 				selection_primary = { point1, point2 }
@@ -1639,7 +1618,7 @@ function MOVE_TAB:Init()
 				local line = self.list_line_1:GetSelectedLine()
 				if not line then
 					Warning( "Select Line 1" ) return false
-				elseif not PrecisionAlign.Functions.construct_exists( "Line", line ) then
+				elseif not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, line ) then
 					Warning( "Line " .. tostring(line) .. " not defined" ) return false
 				end
 				selection_primary = { line }
@@ -1647,7 +1626,7 @@ function MOVE_TAB:Init()
 				local plane = self.list_plane_1:GetSelectedLine()
 				if not plane then
 					Warning( "Select Plane 1" ) return false
-				elseif not PrecisionAlign.Functions.construct_exists( "Plane", plane ) then
+				elseif not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_PLANE, plane ) then
 					Warning( "Plane " .. tostring(plane) .. " not defined" ) return false
 				end
 				selection_primary = { plane }
@@ -1742,7 +1721,7 @@ function MOVE_TAB:Init()
 	AddMenuText( "Rotate Around World Axes", 453, self:GetTall() / 2 - 10, self )
 
 	self.list_pivotpoint = vgui.Create( "PA_Construct_ListView", self )
-		self.list_pivotpoint:Text( "Pivot Point", "Point", self )
+		self.list_pivotpoint:Text( "Pivot Point", PrecisionAlign.CONSTRUCT_POINT, self )
 		self.list_pivotpoint:SetPos(463, 250)
 		self.list_pivotpoint:SetTooltip( "Double click to deselect" )
 		self.list_pivotpoint:SetMultiSelect(false)
@@ -1781,7 +1760,7 @@ function MOVE_TAB:Init()
 			-- Check pivot selection
 			local pivot_selection = self.list_pivotpoint:GetSelectedLine()
 			local pivot
-			if pivot_selection and PrecisionAlign.Functions.construct_exists( "Point", pivot_selection ) then
+			if pivot_selection and PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, pivot_selection ) then
 				pivot = PrecisionAlign.Functions.point_global( pivot_selection ).origin
 			end
 
@@ -1828,7 +1807,7 @@ function FUNCTIONS_TAB:Init()
 	self:CopyBounds( self:GetParent() )
 
 	local width = 148.3
-	local string_table = {"Point", "Line", "Plane"}
+	local string_table = {"Point", PrecisionAlign.CONSTRUCT_LINE, "Plane"}
 	local selection_lists = {}
 
 
@@ -1838,19 +1817,19 @@ function FUNCTIONS_TAB:Init()
 	AddMenuText( "Selection", 10, 5, self.colour_panel_1 )
 
 	self.list_point_primary = vgui.Create( "PA_Construct_ListView", self.colour_panel_1 )
-		self.list_point_primary:Text( "Primary", "Point", self.colour_panel_1 )
+		self.list_point_primary:Text( "Primary", PrecisionAlign.CONSTRUCT_POINT, self.colour_panel_1 )
 		self.list_point_primary:SetPos(20, 30)
 		self.list_point_primary:SetMultiSelect(false)
 		self.list_point_primary:SetVisible(false)
 
 	self.list_line_primary = vgui.Create( "PA_Construct_ListView", self.colour_panel_1 )
-		self.list_line_primary:Text( "Primary", "Line", self.colour_panel_1 )
+		self.list_line_primary:Text( "Primary", PrecisionAlign.CONSTRUCT_LINE, self.colour_panel_1 )
 		self.list_line_primary:SetPos(20, 30)
 		self.list_line_primary:SetMultiSelect(false)
 		self.list_line_primary:SetVisible(false)
 
 	self.list_plane_primary = vgui.Create( "PA_Construct_ListView", self.colour_panel_1 )
-		self.list_plane_primary:Text( "Primary", "Plane", self.colour_panel_1 )
+		self.list_plane_primary:Text( "Primary", PrecisionAlign.CONSTRUCT_PLANE, self.colour_panel_1 )
 		self.list_plane_primary:SetPos(20, 30)
 		self.list_plane_primary:SetMultiSelect(false)
 		self.list_plane_primary:SetVisible(false)
@@ -1864,7 +1843,7 @@ function FUNCTIONS_TAB:Init()
 	self.point_text:SetContentAlignment(2)
 
 	self.list_point_secondary = vgui.Create( "PA_Construct_ListView", self.colour_panel_2 )
-		self.list_point_secondary:Text( "Point Selection", "Point", self.colour_panel_2 )
+		self.list_point_secondary:Text( "Point Selection", PrecisionAlign.CONSTRUCT_POINT, self.colour_panel_2 )
 		self.list_point_secondary:SetPos(20, 30)
 		self.list_point_secondary:SetVisible(false)
 		table.insert(selection_lists, self.list_point_secondary)
@@ -1878,7 +1857,7 @@ function FUNCTIONS_TAB:Init()
 	self.line_text:SetContentAlignment(2)
 
 	self.list_line_secondary = vgui.Create( "PA_Construct_ListView", self.colour_panel_3 )
-		self.list_line_secondary:Text( "Line Selection", "Line", self.colour_panel_3 )
+		self.list_line_secondary:Text( "Line Selection", PrecisionAlign.CONSTRUCT_LINE, self.colour_panel_3 )
 		self.list_line_secondary:SetPos(20, 30)
 		self.list_line_secondary:SetVisible(false)
 		table.insert(selection_lists, self.list_line_secondary)
@@ -1892,7 +1871,7 @@ function FUNCTIONS_TAB:Init()
 	self.plane_text:SetContentAlignment(2)
 
 	self.list_plane_secondary = vgui.Create( "PA_Construct_ListView", self.colour_panel_4 )
-		self.list_plane_secondary:Text( "Plane Selection", "Plane", self.colour_panel_4 )
+		self.list_plane_secondary:Text( "Plane Selection", PrecisionAlign.CONSTRUCT_PLANE, self.colour_panel_4 )
 		self.list_plane_secondary:SetPos(20, 30)
 		self.list_plane_secondary:SetVisible(false)
 		table.insert(selection_lists, self.list_plane_secondary)
@@ -2113,7 +2092,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_line_move_startpoint.func = function( selection_primary, selection_secondary )
 			local origin = PrecisionAlign.Functions.point_global( selection_secondary[1] ).origin
 
-			if PrecisionAlign.Functions.construct_exists( "Line", selection_primary ) then
+			if PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, selection_primary ) then
 				local startpoint = PrecisionAlign.Functions.line_global( selection_primary ).startpoint
 				local endpoint = PrecisionAlign.Functions.line_global( selection_primary ).endpoint
 
@@ -2290,7 +2269,7 @@ function ROTATION_TAB:Init()
 	AddMenuText( "Entity Angles", 10, 5, self )
 
 	self.list_pivotpoint = vgui.Create( "PA_Construct_ListView", self )
-		self.list_pivotpoint:Text( "Pivot Point", "Point", self )
+		self.list_pivotpoint:Text( "Pivot Point", PrecisionAlign.CONSTRUCT_POINT, self )
 		self.list_pivotpoint:SetPos(15, 30)
 		self.list_pivotpoint:SetTooltip( "Double click to deselect" )
 		self.list_pivotpoint:SetMultiSelect(false)
@@ -2339,7 +2318,7 @@ function ROTATION_TAB:Init()
 
 			local pivot = self.list_pivotpoint:GetSelectedLine()
 			local vec
-			if pivot and PrecisionAlign.Functions.construct_exists( "Point", pivot ) then
+			if pivot and PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, pivot ) then
 				vec = PrecisionAlign.Functions.point_global( pivot ).origin
 			end
 
@@ -2547,7 +2526,7 @@ function ROTATION_TAB:Init()
 	AddMenuText( "Rotate Around Axis", 10, self:GetTall() / 2 - 10, self )
 
 	self.list_line_axis = vgui.Create( "PA_Construct_ListView", self )
-		self.list_line_axis:Text( "Axis", "Line", self )
+		self.list_line_axis:Text( "Axis", PrecisionAlign.CONSTRUCT_LINE, self )
 		self.list_line_axis:SetPos(15, 250)
 		self.list_line_axis:SetMultiSelect(false)
 
@@ -2578,7 +2557,7 @@ function ROTATION_TAB:Init()
 				return false
 			end
 
-			if not PrecisionAlign.Functions.construct_exists( "Line", selected_line ) then
+			if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, selected_line ) then
 				Warning("Line not correctly defined")
 				return false
 			end
@@ -2626,7 +2605,7 @@ function ROTATION_TAB:Init()
 
 			local pivot = self.list_pivotpoint:GetSelectedLine()
 			local vec = line.startpoint
-			if pivot and PrecisionAlign.Functions.construct_exists( "Point", pivot ) then
+			if pivot and PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, pivot ) then
 				vec = PrecisionAlign.Functions.point_global( pivot ).origin
 			end
 
@@ -2682,7 +2661,7 @@ function ROTATION_TAB:Init()
 
 			local pivot = self.list_pivotpoint:GetSelectedLine()
 			local vec
-			if pivot and PrecisionAlign.Functions.construct_exists( "Point", pivot ) then
+			if pivot and PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, pivot ) then
 				vec = PrecisionAlign.Functions.point_global( pivot ).origin
 			end
 
@@ -2714,7 +2693,7 @@ function ROTATION_FUNCTIONS_TAB:Init()
 
 	local width = 148.3
 	local string_table = {"Line 1", "Line 2", "Plane 1", "Plane 2"}
-	local string_table2 = {"Line", "Line", "Plane", "Plane"}
+	local string_table2 = {PrecisionAlign.CONSTRUCT_LINE, PrecisionAlign.CONSTRUCT_LINE, PrecisionAlign.CONSTRUCT_PLANE, PrecisionAlign.CONSTRUCT_PLANE}
 	local selection_lists = {}
 
 	AddMenuText( "Selection", 10, 5, self )
@@ -2723,7 +2702,7 @@ function ROTATION_FUNCTIONS_TAB:Init()
 		self.colour_panel_1:SetPos(0, 0)
 
 	self.list_line_1 = vgui.Create( "PA_Construct_ListView", self.colour_panel_1 )
-		self.list_line_1:Text( "Line 1 Selection", "Line", self.colour_panel_1 )
+		self.list_line_1:Text( "Line 1 Selection", PrecisionAlign.CONSTRUCT_LINE, self.colour_panel_1 )
 		self.list_line_1:SetPos(20, 30)
 		self.list_line_1:SetMultiSelect(false)
 		self.list_line_1:SetVisible(false)
@@ -2734,7 +2713,7 @@ function ROTATION_FUNCTIONS_TAB:Init()
 		self.colour_panel_2:SetPos(width, 0)
 
 	self.list_line_2 = vgui.Create( "PA_Construct_ListView", self.colour_panel_2 )
-		self.list_line_2:Text( "Line 2 Selection", "Line", self.colour_panel_2 )
+		self.list_line_2:Text( "Line 2 Selection", PrecisionAlign.CONSTRUCT_LINE, self.colour_panel_2 )
 		self.list_line_2:SetPos(20, 30)
 		self.list_line_2:SetMultiSelect(false)
 		self.list_line_2:SetVisible(false)
@@ -2745,7 +2724,7 @@ function ROTATION_FUNCTIONS_TAB:Init()
 		self.colour_panel_3:SetPos(width * 2, 0)
 
 	self.list_plane_1 = vgui.Create( "PA_Construct_ListView", self.colour_panel_3 )
-		self.list_plane_1:Text( "Plane 1 Selection", "Plane", self.colour_panel_3 )
+		self.list_plane_1:Text( "Plane 1 Selection", PrecisionAlign.CONSTRUCT_PLANE, self.colour_panel_3 )
 		self.list_plane_1:SetPos(20, 30)
 		self.list_plane_1:SetMultiSelect(false)
 		self.list_plane_1:SetVisible(false)
@@ -2756,7 +2735,7 @@ function ROTATION_FUNCTIONS_TAB:Init()
 		self.colour_panel_4:SetPos(width * 3, 0)
 
 	self.list_plane_2 = vgui.Create( "PA_Construct_ListView", self.colour_panel_4 )
-		self.list_plane_2:Text( "Plane 2 Selection", "Plane", self.colour_panel_4 )
+		self.list_plane_2:Text( "Plane 2 Selection", PrecisionAlign.CONSTRUCT_PLANE, self.colour_panel_4 )
 		self.list_plane_2:SetPos(20, 30)
 		self.list_plane_2:SetMultiSelect(false)
 		self.list_plane_2:SetVisible(false)
@@ -2823,7 +2802,7 @@ function ROTATION_FUNCTIONS_TAB:Init()
 			-- Filter out non-existant pivot / axis selections before passing to functions
 			local pivot = self.list_pivotpoint:GetSelectedLine()
 			if pivot then
-				if not PrecisionAlign.Functions.construct_exists( "Point", pivot ) then
+				if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, pivot ) then
 					pivot = nil
 				else
 					pivot = PrecisionAlign.Functions.point_global( pivot ).origin
@@ -2832,7 +2811,7 @@ function ROTATION_FUNCTIONS_TAB:Init()
 
 			local axis = self.list_line_axis:GetSelectedLine()
 			if axis then
-				if not PrecisionAlign.Functions.construct_exists( "Line", axis ) then
+				if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, axis ) then
 					axis = nil
 				else
 					axis = PrecisionAlign.Functions.line_global( axis )
@@ -2849,7 +2828,7 @@ function ROTATION_FUNCTIONS_TAB:Init()
 	AddMenuText( "Optional selections", 10, self:GetTall() / 2 - 10, self )
 
 	self.list_pivotpoint = vgui.Create( "PA_Construct_ListView", self )
-		self.list_pivotpoint:Text( "Pivot Point", "Point", self )
+		self.list_pivotpoint:Text( "Pivot Point", PrecisionAlign.CONSTRUCT_POINT, self )
 		self.list_pivotpoint:SetPos(20, 250)
 		self.list_pivotpoint:SetTooltip( "Double click to deselect" )
 		self.list_pivotpoint:SetMultiSelect(false)
@@ -2858,7 +2837,7 @@ function ROTATION_FUNCTIONS_TAB:Init()
 		end
 
 	self.list_line_axis = vgui.Create( "PA_Construct_ListView", self )
-		self.list_line_axis:Text( "Axis", "Line", self )
+		self.list_line_axis:Text( "Axis", PrecisionAlign.CONSTRUCT_LINE, self )
 		self.list_line_axis:SetPos(width + 20, 250)
 		self.list_line_axis:SetTooltip( "Double click to deselect" )
 		self.list_line_axis:SetMultiSelect(false)
@@ -2995,7 +2974,7 @@ function CONSTRAINTS_TAB:Init()
 		self.text_LPos1:SetText("Entity 1")
 
 	self.list_point_LPos1 = vgui.Create( "PA_Construct_ListView", self.colour_panel_1 )
-		self.list_point_LPos1:Text( "Pos 1", "Point", self )
+		self.list_point_LPos1:Text( "Pos 1", PrecisionAlign.CONSTRUCT_POINT, self )
 		self.list_point_LPos1:SetPos(13, 22)
 		self.list_point_LPos1:SetMultiSelect(false)
 
@@ -3009,7 +2988,7 @@ function CONSTRAINTS_TAB:Init()
 		self.text_LPos2:SetText("Entity 2")
 
 	self.list_point_LPos2 = vgui.Create( "PA_Construct_ListView", self.colour_panel_2 )
-		self.list_point_LPos2:Text( "Pos 2", "Point", self )
+		self.list_point_LPos2:Text( "Pos 2", PrecisionAlign.CONSTRUCT_POINT, self )
 		self.list_point_LPos2:SetPos(13, 22)
 		self.list_point_LPos2:SetTooltip( "Double click to deselect" )
 		self.list_point_LPos2:SetMultiSelect(false)
@@ -3060,7 +3039,7 @@ function CONSTRAINTS_TAB:Init()
 				return false
 			end
 
-			if not PrecisionAlign.Functions.construct_exists( "Point", selection1 ) then
+			if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, selection1 ) then
 				Warning("Point 1 has not been defined")
 				return false
 			end
@@ -3074,7 +3053,7 @@ function CONSTRAINTS_TAB:Init()
 					return false
 				end
 
-				if not PrecisionAlign.Functions.construct_exists( "Point", selection2 ) then
+				if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, selection2 ) then
 					Warning("Point 2 has not been defined")
 					return false
 				end
@@ -3084,7 +3063,7 @@ function CONSTRAINTS_TAB:Init()
 			local point1 = PrecisionAlign.Points[ selection1 ]
 			local point2
 
-			if not PrecisionAlign.Functions.construct_exists( "Point", selection2 ) then
+			if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, selection2 ) then
 				point2 = { ["origin"] = PrecisionAlign.Functions.point_global(selection1).origin + Vector(0, 0, 1) }	-- Set so default axis dir is (0, 0, 1)
 			else
 				point2 = PrecisionAlign.Points[ selection2 ]
@@ -3197,7 +3176,7 @@ function CONSTRAINTS_AXIS_TAB:Init()
 		self.text_axis:SetText("Optional")
 
 	self.list_point_axis = vgui.Create( "PA_Construct_ListView", self.colour_panel_1 )
-		self.list_point_axis:Text( "Axis", "Line", self )
+		self.list_point_axis:Text( "Axis", PrecisionAlign.CONSTRUCT_LINE, self )
 		self.list_point_axis:SetPos(13, 22)
 		self.list_point_axis:SetTooltip( "Double click to deselect" )
 		self.list_point_axis:SetMultiSelect(false)
@@ -3252,7 +3231,7 @@ function CONSTRAINTS_AXIS_TAB:Init()
 		local axis_selection = self.list_point_axis:GetSelectedLine()
 		local axis = 0
 		local line
-		if axis_selection and PrecisionAlign.Functions.construct_exists( "Line", axis_selection ) then
+		if axis_selection and PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, axis_selection ) then
 			line = PrecisionAlign.Functions.line_global( axis_selection )
 			axis = ( line.endpoint - line.startpoint ):GetNormal()
 			axis = { x = axis.x, y = axis.y, z = axis.z }

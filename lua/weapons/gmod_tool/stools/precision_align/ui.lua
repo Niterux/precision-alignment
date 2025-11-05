@@ -1,4 +1,3 @@
--- Derma UI for precision alignment stool (client only) - By Wenli
 if SERVER then return end
 
 local PA = "precision_align"
@@ -10,1921 +9,533 @@ PrecisionAlign.SelectedPlane = 1
 
 PrecisionAlign.ActiveEnt = nil
 
-include( "weapons/gmod_tool/stools/" .. PA .. "/manipulation_panel.lua" )
+include("weapons/gmod_tool/stools/" .. PA .. "/manipulation_panel.lua")
 
-local CPanel = controlpanel.Get( PA )
-
-local BGColor = Color(50, 50, 50, 50)
-local BGColor_Background = Color(103, 100, 110, 255)
-local BGColor_Disabled = Color(160, 160, 160, 255)
-local BGColor_Display = Color(170, 170, 170, 255)
-local BGColor_Point = Color(170, 140, 140, 255)
-local BGColor_Line = Color(140, 140, 170, 255)
-local BGColor_Plane = Color(140, 170, 140, 255)
-
-local pointcolour = { r = 255, g = 0, b = 0, a = 255 }
-local linecolour = { r = 0, g = 0, b = 255, a = 255 }
-local planecolour = { r = 0, g = 230, b = 0, a = 255 }
-
-local stackNumCvar = GetConVar( PA_ .. "stack_num" )
-local stackNoCollideCvar = GetConVar( PA_ .. "stack_nocollide" )
-local attachHCvar = GetConVar( PA_ .. "attachcolour_h" )
-local attachSCvar = GetConVar( PA_ .. "attachcolour_s" )
-local attachVCvar = GetConVar( PA_ .. "attachcolour_v" )
-local attachACvar = GetConVar( PA_ .. "attachcolour_a" )
 local tooltypeCvar = GetConVar( PA_ .. "toolname" )
-local sizePointCvar = GetConVar( PA_ .. "size_point" )
-local sizeLineStartCvar = GetConVar( PA_ .. "size_line_start" )
-local sizeLineEndCvar = GetConVar( PA_ .. "size_line_end" )
-local sizePlaneCvar = GetConVar( PA_ .. "size_plane" )
-local sizePlaneNormCvar = GetConVar( PA_ .. "size_plane_normal" )
 
+local CPanel = controlpanel.Get(PA)
 local Warning = PrecisionAlign.Warning
 
-local function AddMenuText( text, x, y, parent )
-	local Text = vgui.Create( "DLabel", parent )
-	Text:SetFont("Default")
-	Text:SetText( text )
-	Text:SizeToContents()
-	Text:SetPos( x, y )
-	return Text
+do
+    local PA_CPanel_tool_list = {}
+
+    function PA_CPanel_tool_list:AddLine(ToolMode)
+        local Line = self:Add("PA_ToolModeSelector")
+        Line:SetMode(ToolMode)
+        Line:Dock(TOP)
+        Line:SetSize(0, 18)
+        if tooltypeCvar:GetString() == ToolMode then
+            Line:SelectNode()
+        end
+        return Line
+    end
+
+    function PA_CPanel_tool_list:Init()
+        local H = 0
+        for ToolMode in PrecisionAlign.GetToolModes() do
+            local Line = self:AddLine(ToolMode)
+            H = H + Line:GetTall()
+        end
+
+        self:SetSize(0, H)
+    end
+
+    function PA_CPanel_tool_list:GetSelectedNode()
+        return self.SelectedNode
+    end
+
+    function PA_CPanel_tool_list:SetSelectedNode(Node)
+        self.SelectedNode = Node
+    end
+
+    vgui.Register("PA_CPanel_tool_list", PA_CPanel_tool_list, "DPanel")
 end
 
-local function play_sound_true()
-	LocalPlayer():EmitSound("buttons/button15.wav", 100, 100)
-end
-
-local function play_sound_false()
-	LocalPlayer():EmitSound("buttons/lightswitch2.wav", 100, 100)
-end
-
-
---********************************************************************************************************************--
--- Custom Derma Controls
---********************************************************************************************************************--
-
-
---[[---------------------------------------------------------
-   Name: Stack_Num_Request
-   Popup window to request stack_num
----------------------------------------------------------]]
-
-local STACK_POPUP = {}
-
-function STACK_POPUP:Init()
-	self:SetSize( 300, 150 )
-	self:Center()
-	self:SetTitle( "Precision Alignment Multi-Stack Settings" )
-	self:ShowCloseButton( true )
-	self:SetDraggable( false )
-	self:SetBackgroundBlur( true )
-	self:SetDrawOnTop( true )
-
-	self.text_stackamount = vgui.Create( "DLabel", self )
-		self.text_stackamount:SetText( "Stack Amount:" )
-		self.text_stackamount:SizeToContents()
-		self.text_stackamount:SetContentAlignment( 8 )
-		self.text_stackamount:SetTextColor( color_white )
-		self.text_stackamount:StretchToParent( 5, 40, 5, 5 )
-
-	self.slider_stackamount = vgui.Create( "DNumSlider", self )
-		self.slider_stackamount:StretchToParent( 10, nil, 10, nil )
-		self.slider_stackamount:AlignTop( 45 )
-		self.slider_stackamount:SetText( "" )
-		self.slider_stackamount:SetMinMax( 1, 20 )
-		self.slider_stackamount:SetDecimals( 0 )
-		self.slider_stackamount:SetValue( stackNumCvar:GetInt() )
-		self.slider_stackamount.Text = self.slider_stackamount:GetTextArea()
-		self.slider_stackamount.Text.OnEnter = function()
-			self.button_ok:DoClick()
-		end
-		self.slider_stackamount.Text:RequestFocus()
-
-	self.checkbox_nocollide = vgui.Create( "DCheckBoxLabel", self )
-		self.checkbox_nocollide:SetText( "Nocollide" )
-		self.checkbox_nocollide:SetTooltip( "Nocollide each stacked entity with the next" )
-		self.checkbox_nocollide:SizeToContents()
-		self.checkbox_nocollide:AlignBottom( 45 )
-		self.checkbox_nocollide:AlignLeft( 10 )
-		self.checkbox_nocollide:SetValue( stackNoCollideCvar:GetInt() )
-
-	self.button_ok = vgui.Create( "DButton", self )
-		self.button_ok:SetText( "OK" )
-		self.button_ok:SizeToContents()
-		self.button_ok:SetSize( 80, 25 )
-		self.button_ok:AlignLeft( 5 )
-		self.button_ok:AlignBottom( 5 )
-		self.button_ok.DoClick = function()
-			RunConsoleCommand( PA_ .. "stack_num", tostring( math.Clamp(self.slider_stackamount:GetValue(), 1, 20) ) )
-
-			local nocollide = 0
-			if self.checkbox_nocollide:GetChecked() then nocollide = 1 end
-			RunConsoleCommand( PA_ .. "stack_nocollide", tostring( nocollide ) )
-
-			self:Close()
-		end
-
-	self.button_cancel = vgui.Create( "DButton", self )
-		self.button_cancel:SetText( "Cancel" )
-		self.button_cancel:SizeToContents()
-		self.button_cancel:SetSize( 80, 25 )
-		self.button_cancel:SetPos( 5, 5 )
-		self.button_cancel.DoClick = function() self:Close() end
-		self.button_cancel:AlignRight( 5 )
-		self.button_cancel:AlignBottom( 5 )
-
-	self:MakePopup()
-	self:DoModal()
-end
-
-
-function STACK_POPUP:Paint()
-	if ( self.m_bBackgroundBlur ) then
-		Derma_DrawBackgroundBlur( self, self.m_fCreateTime )
-	end
-
-	local width, height = self:GetSize()
-	draw.RoundedBox(6, 0, 0, width, 25, BGColor_Display)
-	draw.RoundedBox(6, 2, 2, width - 4, 21, BGColor_Background)
-
-	draw.RoundedBox(6, 0, 25, width, height - 25, color_black)
-	draw.RoundedBox(6, 1, 26, width - 2, height - 27, BGColor_Background )
-end
-
-vgui.Register("PA_Stack_Popup", STACK_POPUP, "DFrame")
-
-
---[[---------------------------------------------------------
-   Name: PA_Construct_ListView
-   Standard construct list
----------------------------------------------------------]]
-
-local CONSTRUCT_LISTVIEW = {}
-function CONSTRUCT_LISTVIEW:Init()
-	self:SetSize(110, 169)
-	--self:SetSortable(false)
-end
-
-function CONSTRUCT_LISTVIEW:Text( title, text )
-	self.construct_type = text
-	self:AddColumn( "" .. title)
-	for i = 1, 9 do
-		local line = self:AddLine(text .. " " .. tostring(i))
-		line.indicator = vgui.Create( "PA_Indicator", line )
-	end
-
-	-- Format header
-	local Header = self.Columns[1].Header
-	Header:SetFont("DermaDefaultBold")
-	Header:SetContentAlignment( 5 )
-end
-
-function CONSTRUCT_LISTVIEW:SetIndicators()
-	for i = 1, 9 do
-		local line = self:GetLine(i)
-		line.indicator = vgui.Create( "PA_Indicator", line )
-	end
-end
-
-function CONSTRUCT_LISTVIEW:SetIndicatorOffset( offset )
-	for i = 1, 9 do
-		local indicator = self:GetLine(i).indicator
-		indicator.offset = offset
-	end
-end
-
-vgui.Register("PA_Construct_ListView", CONSTRUCT_LISTVIEW, "DListView")
-
--- Indicator to tell whether construct is defined
-local INDICATOR = {}
-
-function INDICATOR:Init()
-	self.offset = 0
-end
-
-function INDICATOR:PerformLayout()
-	local width, height = self:GetParent():GetWide() - 5 - self.offset, self:GetParent():GetTall() - 4
-	self:SetSize( height, height )
-	self:SetPos( width - height, 2 )
-end
-
-function INDICATOR:Paint()
-	local textbox = self:GetParent()
-
-	if PrecisionAlign.Functions.construct_exists(textbox:GetListView().construct_type, textbox:GetID()) then
-		draw.RoundedBox( 6, 0, 0, self:GetWide(), self:GetTall(), Color(0, 230, 0, 255) )
-	end
-end
-
-vgui.Register("PA_Indicator", INDICATOR, "DPanel")
-
---[[--------------------------------------------------------
-	Manipulation Panel
---------------------------------------------------------]]--
-local PA_manipulation_panel = false-- = vgui.Create( "PA_Manipulation_Frame" )
---PA_manipulation_panel:SetVisible(false)
-
+local PA_manipulation_panel = false
 local function precision_align_open_panel_func()
-	if not PA_manipulation_panel then
-		PA_manipulation_panel = vgui.Create( "PA_Manipulation_Frame" )
-	else
-		if PA_manipulation_panel:IsVisible() then
-			RememberCursorPosition()
-			PA_manipulation_panel:SetVisible(false)
-		else
-			PA_manipulation_panel:SetVisible(true)
-			RestoreCursorPosition()
-		end
-	end
+    if not PA_manipulation_panel then
+        PA_manipulation_panel = vgui.Create( "PA_Manipulation_Frame" )
+    else
+        if PA_manipulation_panel:IsVisible() then
+            RememberCursorPosition()
+            PA_manipulation_panel:SetVisible(false)
+        else
+            PA_manipulation_panel:SetVisible(true)
+            RestoreCursorPosition()
+        end
+    end
 end
 concommand.Add( PA_ .. "open_panel", precision_align_open_panel_func )
 
---[[---------------------------------------------------------
-   Name: PA_XYZ_Sliders
-   XYZ slider control for vector input/output
----------------------------------------------------------]]
+do
+    local PA_ToolModeSelector = {}
 
-local XYZ_SLIDER = {}
-function XYZ_SLIDER:Init()
-	--self:SetSize(130, 100) -- Keep the second number at 100
-	--self:SetWide(200)
-	self:SetMinMax( -50000, 50000 )
-	self:SetDecimals( 3 )
-	self:SetValue( 0 )
+    function PA_ToolModeSelector:SetMode(ToolMode)
+        self.ToolMode = ToolMode
+        local ToolModeObj = PrecisionAlign.ToolModes[ToolMode]
+        if not ToolModeObj then return ErrorNoHalt("Couldn't set the mode!") end
 
-	-- This is so we can identify the slider belongs to PA, so we can hook keyboard focus below
-	self:GetTextArea().Type = "PA"
+        self.DrawColor                    = ToolModeObj:GetBackgroundColor():Copy()
+        self.DrawColor:AddBrightness(0.08) -- To adjust for the default skin
+
+        self.SelectedDrawColor            = self.DrawColor:Copy()
+        self.SelectedHighlightedDrawColor = self.DrawColor:Copy()
+        self.HighlightDrawColor           = self.DrawColor:Copy()
+        self.DepressedDrawColor           = self.DrawColor:Copy()
+
+        self.SelectedDrawColor:SetBrightness(0.95)
+        self.SelectedHighlightedDrawColor:SetBrightness(1)
+        self.HighlightDrawColor:SetBrightness(0.8)
+        self.DepressedDrawColor:SetBrightness(0.5)
+
+        self:SetText("")
+    end
+
+    function PA_ToolModeSelector:DoClick()
+        self:SelectNode(self)
+        self.SelectTime = RealTime()
+        RunConsoleCommand( PA_ .. "toolname", self.ToolMode)
+    end
+
+    function PA_ToolModeSelector:IsSelectedNode()
+        return self:GetParent():GetSelectedNode() == self
+    end
+
+    function PA_ToolModeSelector:SelectNode()
+        self:GetParent():SetSelectedNode(self)
+    end
+
+    function PA_ToolModeSelector:Paint(width, height)
+        local DrawColor
+        local TextColor = color_black
+        if self:IsSelectedNode() then
+            if self.Hovered then
+                if input.IsMouseDown(MOUSE_LEFT) then
+                    DrawColor = self.DepressedDrawColor
+                else
+                    DrawColor = self.SelectedHighlightedDrawColor
+                end
+            else
+                DrawColor = self.SelectedDrawColor
+            end
+            TextColor = color_white
+            DrawColor = DrawColor:Copy()
+            if not self.SelectTime then
+                self.SelectTime = RealTime()
+            end
+            DrawColor:AddBrightness(math.Remap(math.cos((RealTime() - self.SelectTime) * 6), -1, 1, 0, -0.2))
+        elseif input.IsMouseDown(MOUSE_LEFT) and self.Hovered then
+            DrawColor = self.DepressedDrawColor
+        elseif self.Hovered then
+            DrawColor = self.HighlightDrawColor
+        else
+            DrawColor = self.DrawColor
+        end
+
+        surface.SetDrawColor(DrawColor)
+        self:GetSkin().tex.Button(0, 0, width, height, DrawColor)
+
+        draw.SimpleText(self.ToolMode or "UNKNOWN", "DermaDefault", 4, height / 2, TextColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+    end
+
+    vgui.Register("PA_ToolModeSelector", PA_ToolModeSelector, "DButton")
 end
 
-vgui.Register("PA_XYZ_Slider", XYZ_SLIDER, "DNumSlider")
+do
+    local PA_ConstructList = {}
 
-local text = {}
+    function PA_ConstructList:Init()
+        self:AddColumn("")
+        self:SetHideHeaders(true)
+        self:SetMultiSelect(false)
+    end
 
-function text:Init()
-	self:SetSize(130, 100)
+    function PA_ConstructList:Setup(Construct, Click, DbClick)
+        self.construct_type = Construct
+        local Name = PrecisionAlign.GetConstructName(Construct)
+        for I = 1, 9 do
+            local Line = self:AddLine(Name .. " " .. I)
+            Line.Indicator = Line:Add "PA_Indicator"
+        end
 
+        if Click then
+            self.OnRowSelected = function(_, Line) Click(Line) end
+        end
+
+        if DbClick then
+            self.DoDoubleClick = function(_, Line) DbClick(Line) end
+        end
+
+        self:SelectFirstItem()
+    end
+
+    vgui.Register("PA_ConstructList", PA_ConstructList, "DListView")
 end
-vgui.Register("PA_Temp_textbox", text, "DLabel")
+
+do
+    local PA_ConstructSelectionPanel = {}
+
+    function PA_ConstructSelectionPanel:PerformLayout(w, h)
+        if not IsValid(self.Left) then return end
+
+        local Padding = 4
+        if IsValid(self.Right) then
+            self.Left:SetPos(Padding, Padding)
+            self.Left:SetSize((w / 2) - Padding, h - (Padding * 2))
+
+            self.Right:SetPos(Padding + (w / 2), Padding)
+            self.Right:SetSize((w / 2) - Padding, h - (Padding * 2))
+        else
+            self.Left:SetPos(Padding, Padding)
+            self.Left:SetSize(w - (Padding * 2), h - (Padding * 2))
+        end
+    end
+
+    function PA_ConstructSelectionPanel:Setup(Construct, LeftClick, LeftDbClick, RightClick, RightDbClick)
+        self.Left = self:Add("PA_ConstructList")
+        self.Left:Setup(Construct, LeftClick, LeftDbClick)
+        if RightClick and RightDbClick then
+            self.Right = self:Add("PA_ConstructList")
+            self.Right:Setup(Construct, RightClick, RightDbClick)
+        end
+
+        return self.Left, self.Right
+    end
+
+    vgui.Register("PA_ConstructSelectionPanel", PA_ConstructSelectionPanel, "DPanel")
+end
+
+do
+    local PA_ButtonFlex = {}
+
+    function PA_ButtonFlex:Init()
+        self:SetPaintBackground(false)
+    end
+
+    function PA_ButtonFlex:PerformLayout(w, h)
+        local Children = self:GetChildren()
+        local ChildrenCount = #Children
+        local Padding = 2
+        for I, Child in ipairs(Children) do
+            local X = Padding + math.Remap(I, 1, ChildrenCount + 1, 0, w)
+            Child:SetPos(X, Padding)
+            Child:SetSize((w - (Padding * 2)) / ChildrenCount, h - Padding)
+        end
+    end
+
+    vgui.Register("PA_ButtonFlex", PA_ButtonFlex, "DPanel")
+end
+
+do
+    local PA_Tool_Construct_Panel = {}
+    function PA_Tool_Construct_Panel:SetConstructType(Construct)
+        self.Header.Text = string.upper(PrecisionAlign.GetConstructName(Construct)) .. ""
+        self.Header.Color = (Construct and PrecisionAlign.GetConstructColor(Construct) or color_black)
+        self.Construct = Construct
+    end
+
+    function PA_Tool_Construct_Panel:SetTextColor(Text, Color)
+        self.Header.Text = Text
+        self.Header.Color = Color
+    end
+
+    function PA_Tool_Construct_Panel:SetSelectionMode(LeftClick, LeftDbClick, RightClick, RightDbClick)
+        if IsValid(self.Selection) then self.Selection:Remove() end
+        self.Selection = self:Add("PA_ConstructSelectionPanel")
+        self.Selection:Dock(FILL)
+        return self.Selection:Setup(self.Construct, LeftClick, LeftDbClick, RightClick, RightDbClick)
+    end
+
+    function PA_Tool_Construct_Panel:AddButtons(CanMoveEntity)
+        local text = string.lower(PrecisionAlign.GetConstructName(self.Construct))
+
+        local MoveBtn
+        if CanMoveEntity then
+            local MoveBtnContainer = self:Add("PA_ButtonFlex")
+            MoveBtnContainer:Dock(BOTTOM)
+            MoveBtnContainer:SetSize(0, 20)
+
+            MoveBtn = MoveBtnContainer:Add("PA_Function_Button")
+            MoveBtn:SetText("Move Entity")
+            MoveBtn:SetTooltip("Move entity from left selected " .. text .. " -> right selected " .. text)
+        end
+
+        local Attach_DeleteAll = self:Add("PA_ButtonFlex")
+        Attach_DeleteAll:Dock(BOTTOM)
+        Attach_DeleteAll:SetSize(0, 20)
+
+        local AttachBtn    = Attach_DeleteAll:Add("PA_Function_Button")
+        AttachBtn:SetText("Attach")
+        AttachBtn:SetTooltip("Attach " .. text .. " to selected entity (detach if no ent selected)")
+
+        local DeleteAllBtn = Attach_DeleteAll:Add("PA_Function_Button")
+        DeleteAllBtn:SetText("Delete All")
+        DeleteAllBtn:SetTooltip("Delete all " .. text .. "s")
+
+        local View_Delete = self:Add("PA_ButtonFlex")
+        View_Delete:Dock(BOTTOM)
+        View_Delete:SetSize(0, 20)
+
+        local ViewBtn   = View_Delete:Add("PA_Function_Button")
+        ViewBtn:SetText("View")
+        ViewBtn:SetTooltip("View the selected " .. text)
+
+        local DeleteBtn = View_Delete:Add("PA_Function_Button")
+        DeleteBtn:SetTooltip("Delete the selected " .. text)
+        DeleteBtn:SetText("Delete")
+
+        return ViewBtn, DeleteBtn, AttachBtn, DeleteAllBtn, MoveBtn
+    end
+
+    function PA_Tool_Construct_Panel:Init()
+        self:Dock(TOP)
+        self:SetSize(0, 170)
+        self.Header = self:Add("DButton")
+        self.Header:Dock(TOP)
+        self.Header:SetSize(0, 14)
+        self.Header:SetText("")
+        self.Header.DefaultColor = color_black
+        self.Header.Paint = self.PaintButton
+    end
+
+    function PA_Tool_Construct_Panel:Paint()
+
+    end
+
+    function PA_Tool_Construct_Panel:PaintButton(w, h)
+        local BackColor =  (self.Color or color_black):Copy()
+        if self.Hovered then
+            if input.IsMouseDown(MOUSE_LEFT) then
+                BackColor:AddBrightness(-0.2)
+                BackColor:AddSaturation(0.14)
+            else
+                BackColor:AddBrightness(0.1)
+                BackColor:AddSaturation(0.1)
+            end
+        end
+
+        local drawBack = w - 140
+        draw.RoundedBox(6, w / 2 - (drawBack / 2), 0, drawBack, h, BackColor)
+        draw.SimpleText(self.Text or "INVALID", "Default", w / 2, h / 2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    end
+
+    vgui.Register("PA_Tool_Construct_Panel", PA_Tool_Construct_Panel, "DPanel")
+end
 
 -- These hooks allow the slider text boxes to steal keyboard focus
 local function TextFocusOn( pnl )
-	if	pnl:GetClassName() == "TextEntry" and pnl.Type == "PA" then
-		PA_manipulation_panel:SetKeyboardInputEnabled( true )
-	end
+    if	pnl:GetClassName() == "TextEntry" and pnl.Type == "PA" then
+        PA_manipulation_panel:SetKeyboardInputEnabled( true )
+    end
 end
 hook.Add( "OnTextEntryGetFocus", "PAKeyboardFocusOn", TextFocusOn )
 
 local function TextFocusOff( pnl )
-	if	pnl:GetClassName() == "TextEntry" and pnl.Type == "PA" then
-		PA_manipulation_panel:SetKeyboardInputEnabled( false )
-	end
+    if pnl:GetClassName() == "TextEntry" and pnl.Type == "PA" then
+        PA_manipulation_panel:SetKeyboardInputEnabled( false )
+    end
 end
 hook.Add( "OnTextEntryLoseFocus", "PAKeyboardFocusOff", TextFocusOff )
 
 
-local XYZ_SLIDERS = {}
-function XYZ_SLIDERS:Init()
-	self.slider_x = vgui.Create( "PA_XYZ_Slider", self )
-	self.slider_y = vgui.Create( "PA_XYZ_Slider", self )
-	self.slider_z = vgui.Create( "PA_XYZ_Slider", self )
-
-	self.slider_x.Label:SetWide( 5 )
-	self.slider_y.Label:SetWide( 5 )
-	self.slider_z.Label:SetWide( 5 )
-
-	self.slider_x:SetText("X")
-	self.slider_y:SetText("Y")
-	self.slider_z:SetText("Z")
-end
-
-function XYZ_SLIDERS:PerformLayout()
-	local w, h = self:GetWide(), self:GetTall() - 10
-	local x = 0
-	local y1 = 0
-	local y2 = h / 2 - 20
-	local y3 = h - 40
-	local width = w
-	-- local height = 100
-
-	self.slider_x:SetWide( width ) --:SetSize(width, height)
-	self.slider_y:SetWide( width ) --:SetSize(width, height)
-	self.slider_z:SetWide( width ) --:SetSize(width, height)
-
-	self.slider_x:SetPos(x, y1)
-	self.slider_y:SetPos(x, y2)
-	self.slider_z:SetPos(x, y3)
-end
-
-function XYZ_SLIDERS:GetValues()
-	local x, y, z
-	x = self.slider_x:GetValue()
-	y = self.slider_y:GetValue()
-	z = self.slider_z:GetValue()
-
-	return Vector( x, y, z )
-end
-
-function XYZ_SLIDERS:SetValues( vec )
-	self.slider_x:SetValue(vec.x)
-	self.slider_y:SetValue(vec.y)
-	self.slider_z:SetValue(vec.z)
-end
-
-function XYZ_SLIDERS:SetRange( x )
-	self.slider_x:SetMinMax( -x, x )
-	self.slider_y:SetMinMax( -x, x )
-	self.slider_z:SetMinMax( -x, x )
-end
-
-function XYZ_SLIDERS:Paint()
-end
-
-vgui.Register("PA_XYZ_Sliders", XYZ_SLIDERS, "DPanel")
-
-
-
-
-
-
-
---[[---------------------------------------------------------
-   Name: PA_Function_Button
-   Standard button that can be assigned a function
----------------------------------------------------------]]
-
-local FUNCTION_BUTTON = {}
-function FUNCTION_BUTTON:Init()
-	self:SetSize(200, 25)
-end
-
-function FUNCTION_BUTTON:SetFunction( func )
-	self.DoClick = function()
-		local ret = func()
-		if ret == true then
-			play_sound_true()
-		elseif ret == false then
-			play_sound_false()
-		end
-	end
-end
-vgui.Register("PA_Function_Button", FUNCTION_BUTTON, "DButton")
-
---[[---------------------------------------------------------
-   Name: PA_Function_Button_2
-   Construct functions selection button
----------------------------------------------------------]]
-
-local function_buttons_2_list = {}
-local FUNCTION_BUTTON_2 = {}
-
-function FUNCTION_BUTTON_2:Init()
-	self:SetSize(130, 25)
-	table.insert(function_buttons_2_list, self)
-
-	self.DoClick = function()
-		local T = self.selections
-		local tab = self:GetParent()
-
-		tab.activebutton = self
-		tab:UpdateDescription()
-
-		tab.list_point_primary:SetVisible(false)
-		tab.list_line_primary:SetVisible(false)
-		tab.list_plane_primary:SetVisible(false)
-
-		if T[1] == "Point" then
-			tab.colour_panel_1:SetColour(BGColor_Point)
-			tab.list_point_primary:SetVisible(true)
-		elseif T[1] == "Line" then
-			tab.colour_panel_1:SetColour(BGColor_Line)
-			tab.list_line_primary:SetVisible(true)
-		elseif T[1] == "Plane" then
-			tab.colour_panel_1:SetColour(BGColor_Plane)
-			tab.list_plane_primary:SetVisible(true)
-		else
-			tab.colour_panel_1:SetColour(BGColor_Disabled)
-		end
-
-		if T[2] ~= 0 then
-			--tab.point_text:SetText( "Select " .. tostring(T[2]) )
-			tab.colour_panel_2:SetColour(BGColor_Point)
-			tab.list_point_secondary:SetVisible(true)
-		else
-			--tab.point_text:SetText( "" )
-			tab.colour_panel_2:SetColour(BGColor_Disabled)
-			tab.list_point_secondary:SetVisible(false)
-		end
-
-		if T[3] ~= 0 then
-			--tab.line_text:SetText( "Select " .. tostring(T[3]) )
-			tab.colour_panel_3:SetColour(BGColor_Line)
-			tab.list_line_secondary:SetVisible(true)
-		else
-			--tab.line_text:SetText( "" )
-			tab.colour_panel_3:SetColour(BGColor_Disabled)
-			tab.list_line_secondary:SetVisible(false)
-		end
-
-		if T[4] ~= 0 then
-			--tab.plane_text:SetText( "Select " .. tostring(T[4]) )
-			tab.colour_panel_4:SetColour(BGColor_Plane)
-			tab.list_plane_secondary:SetVisible(true)
-		else
-			--tab.plane_text:SetText( "" )
-			tab.colour_panel_4:SetColour(BGColor_Disabled)
-			tab.list_plane_secondary:SetVisible(false)
-		end
-	end
-end
-
--- Override mouse functions (make it into a toggle button)
-function FUNCTION_BUTTON_2:OnMousePressed()
-	if not self.Depressed then
-		-- pop up any previously depressed buttons
-		for _, v in pairs(function_buttons_2_list) do
-			if v.Depressed then
-				v.Depressed = false
-			end
-		end
-		self.Depressed = true
-		return self.DoClick()
-	end
-end
-
-function FUNCTION_BUTTON_2:OnMouseReleased()
-end
-
-vgui.Register("PA_Function_Button_2", FUNCTION_BUTTON_2, "DButton")
-
---[[---------------------------------------------------------
-   Name: PA_Function_Button_3
-   Move Constructs selection button
----------------------------------------------------------]]
-
-local function_buttons_3_list = {}
-local FUNCTION_BUTTON_3 = {}
-
-function FUNCTION_BUTTON_3:Init()
-	self:SetSize(110, 25)
-	table.insert(function_buttons_3_list, self)
-
-	self.DoClick = function()
-		local T = self.selections
-		local tab = self:GetParent()
-
-		tab.activebutton = self
-
-		tab.list_point_1:SetVisible(false)
-		tab.list_point_2:SetVisible(false)
-		tab.list_line_1:SetVisible(false)
-		tab.list_plane_1:SetVisible(false)
-
-		if T == "Point" then
-			tab.colour_panel_1:SetColour(BGColor_Point)
-			tab.colour_panel_2:SetColour(BGColor_Point)
-			tab.list_point_1:SetVisible(true)
-			tab.list_point_2:SetVisible(true)
-		elseif T == "Line" then
-			tab.colour_panel_1:SetColour(BGColor_Disabled)
-			tab.colour_panel_2:SetColour(BGColor_Line)
-			tab.list_line_1:SetVisible(true)
-		elseif T == "Plane" then
-			tab.colour_panel_1:SetColour(BGColor_Disabled)
-			tab.colour_panel_2:SetColour(BGColor_Plane)
-			tab.list_plane_1:SetVisible(true)
-		else
-			tab.colour_panel_1:SetColour(BGColor_Disabled)
-			tab.colour_panel_2:SetColour(BGColor_Disabled)
-		end
-	end
-end
-
--- Override mouse functions (make it into a toggle button)
-function FUNCTION_BUTTON_3:OnMousePressed()
-	if not self.Depressed then
-		-- pop up any previously depressed buttons
-		for _, v in pairs (function_buttons_3_list) do
-			if v.Depressed then
-				v.Depressed = false
-			end
-		end
-		self.Depressed = true
-		return self.DoClick()
-	end
-end
-
-function FUNCTION_BUTTON_3:OnMouseReleased()
-end
-
-vgui.Register("PA_Function_Button_3", FUNCTION_BUTTON_3, "DButton")
-
---[[---------------------------------------------------------
-   Name: PA_Function_Button_Rotation
-   Rotation Functions selection button
----------------------------------------------------------]]
-
-local rotation_function_buttons_list = {}
-local FUNCTION_BUTTON_ROTATION = {}
-
-function FUNCTION_BUTTON_ROTATION:Init()
-	self:SetSize(168, 25)
-	table.insert(rotation_function_buttons_list, self)
-
-	self.DoClick = function()
-		local tab = self:GetParent()
-
-		tab.activebutton = self
-		tab:UpdateDescription()
-
-		-- Optional pivot point / axis selections
-		if self.options[1] ~= 0 then
-			tab.list_pivotpoint:SetVisible(true)
-		else
-			tab.list_pivotpoint:SetVisible(false)
-		end
-
-		if self.options[2] ~= 0 then
-			tab.list_line_axis:SetVisible(true)
-		else
-			tab.list_line_axis:SetVisible(false)
-		end
-
-		-- Main function selections
-		if self.selections[1] ~= 0 then
-			tab.colour_panel_1:SetColour(BGColor_Line)
-			tab.list_line_1:SetVisible(true)
-		else
-			tab.colour_panel_1:SetColour(BGColor_Disabled)
-			tab.list_line_1:SetVisible(false)
-		end
-
-		if self.selections[2] ~= 0 then
-			tab.colour_panel_2:SetColour(BGColor_Line)
-			tab.list_line_2:SetVisible(true)
-		else
-			tab.colour_panel_2:SetColour(BGColor_Disabled)
-			tab.list_line_2:SetVisible(false)
-		end
-
-		if self.selections[3] ~= 0 then
-			tab.colour_panel_3:SetColour(BGColor_Plane)
-			tab.list_plane_1:SetVisible(true)
-		else
-			tab.colour_panel_3:SetColour(BGColor_Disabled)
-			tab.list_plane_1:SetVisible(false)
-		end
-
-		if self.selections[4] ~= 0 then
-			tab.colour_panel_4:SetColour(BGColor_Plane)
-			tab.list_plane_2:SetVisible(true)
-		else
-			tab.colour_panel_4:SetColour(BGColor_Disabled)
-			tab.list_plane_2:SetVisible(false)
-		end
-	end
-end
-
--- Override mouse functions (make it into a toggle button)
-function FUNCTION_BUTTON_ROTATION:OnMousePressed()
-	if not self.Depressed then
-		-- pop up any previously depressed buttons
-		for _, v in pairs(rotation_function_buttons_list) do
-			if v.Depressed then
-				v.Depressed = false
-			end
-		end
-		self.Depressed = true
-		return self.DoClick()
-	end
-end
-
-function FUNCTION_BUTTON_ROTATION:OnMouseReleased()
-end
-
-vgui.Register("PA_Function_Button_Rotation", FUNCTION_BUTTON_ROTATION, "DButton")
-
---[[---------------------------------------------------------
-   Name: Standard manipulation window buttons
----------------------------------------------------------]]
-
-local ZERO_BUTTON = {}
-function ZERO_BUTTON:Init()
-	self:SetSize(20, 20)
-	self:SetText( "0" )
-	self:SetTooltip( "Set slider values to 0" )
-end
-
-function ZERO_BUTTON:SetSliders( panel )
-	self:SetFunction( function()
-		panel:SetValues( Vector(0, 0, 0) )
-		return true
-	end )
-end
-
-vgui.Register("PA_Zero_Button", ZERO_BUTTON, "PA_Function_Button")
-
-
-local NEGATE_BUTTON = {}
-function NEGATE_BUTTON:Init()
-	self:SetSize(20, 20)
-	self:SetText( "-" )
-	self:SetTooltip( "Negate slider values" )
-end
-
-function NEGATE_BUTTON:SetSliders( panel )
-	self:SetFunction( function()
-		local v = panel:GetValues()
-		panel:SetValues( Vector(-v.x, -v.y, -v.z) )
-		return true
-	end )
-end
-
-vgui.Register("PA_Negate_Button", NEGATE_BUTTON, "PA_Function_Button")
-
-
-local COPY_CLIPBOARD_BUTTON = {}
-function COPY_CLIPBOARD_BUTTON:Init()
-	self:SetSize(40, 20)
-	self:SetText( "Copy" )
-	self:SetTooltip( "Copy values to clipboard" )
-end
-
-function COPY_CLIPBOARD_BUTTON:SetSliders( panel )
-	self:SetFunction( function()
-		local v = panel:GetValues()
-		-- Format string for better use with E2
-		local x = tostring( math.Round(v.x * 1000) / 1000 )
-		local y = tostring( math.Round(v.y * 1000) / 1000 )
-		local z = tostring( math.Round(v.z * 1000) / 1000 )
-
-		local str = x .. ", " .. y .. ", " .. z
-		SetClipboardText( str )
-		return true
-	end )
-end
-
-vgui.Register("PA_Copy_Clipboard_Button", COPY_CLIPBOARD_BUTTON, "PA_Function_Button")
-
-
-local UPDATE_BUTTON = {}
-function UPDATE_BUTTON:Init()
-	self:SetSize(90, 25)
-	self:SetText( "Update" )
-	self:SetTooltip( "Update other sliders according to these values" )
-end
-
-vgui.Register("PA_Update_Button", UPDATE_BUTTON, "PA_Function_Button")
-
-
-local COPY_BUTTON = {}
-function COPY_BUTTON:Init()
-	self:SetSize(26, 25)
-	self:SetText( "=" )
-	self:SetTooltip( "Set primary value equal to secondary" )
-end
-
-vgui.Register("PA_Copy_Button", COPY_BUTTON, "PA_Function_Button")
-
-
-local ADD_BUTTON = {}
-function ADD_BUTTON:Init()
-	self:SetSize(26, 25)
-	self:SetText( "+" )
-	self:SetTooltip( "Add this value to primary value" )
-end
-
-vgui.Register("PA_Add_Button", ADD_BUTTON, "PA_Function_Button")
-
-
-local SUBTRACT_BUTTON = {}
-function SUBTRACT_BUTTON:Init()
-	self:SetSize(26, 25)
-	self:SetText( "-" )
-	self:SetTooltip( "Subtract this value from primary value" )
-end
-
-vgui.Register("PA_Subtract_Button", SUBTRACT_BUTTON, "PA_Function_Button")
-
-
-local COPY_RIGHT_BUTTON = {}
-function COPY_RIGHT_BUTTON:Init()
-	self:SetSize(26, 25)
-	self:SetText( ">" )
-	self:SetTooltip( "Copy value across to secondary slider" )
-end
-
-vgui.Register("PA_Copy_Right_Button", COPY_RIGHT_BUTTON, "PA_Function_Button")
-
-
-local COPY_LEFT_BUTTON = {}
-function COPY_LEFT_BUTTON:Init()
-	self:SetSize(26, 25)
-	self:SetText( "<" )
-	self:SetTooltip( "Copy value across to primary slider" )
-end
-
-vgui.Register("PA_Copy_Left_Button", COPY_LEFT_BUTTON, "PA_Function_Button")
-
-
-local MOVE_BUTTON = {}
-function MOVE_BUTTON:SetFunction( func )
-	self.DoClick = function()
-		-- Alt to bring up stack number query
-		local alt = LocalPlayer():KeyDown( IN_WALK )
-		if alt then
-			vgui.Create( "PA_Stack_Popup" )
-			return
-		end
-
-		local ret = func()
-		if ret == true then
-			play_sound_true()
-		elseif ret == false then
-			play_sound_false()
-		end
-	end
-end
-
-function MOVE_BUTTON:Think()
-	if IsValid(PrecisionAlign.ActiveEnt) and self:GetDisabled() then
-		self:SetDisabled(false)
-	elseif not IsValid(PrecisionAlign.ActiveEnt) and not self:GetDisabled() then
-		self:SetDisabled(true)
-	end
-end
-
-vgui.Register("PA_Move_Button", MOVE_BUTTON, "DButton")
-
---[[---------------------------------------------------------
-   Name: PA_Colour_Panel
-   Common background panel for listviews
----------------------------------------------------------]]
-
-local COLOUR_PANEL = {}
-function COLOUR_PANEL:Init()
-	self.colour = table.Copy( BGColor_Disabled )
-	self.setcolour = BGColor_Disabled
-	local parent = self:GetParent()
-	self:SetSize( 150, parent:GetTall() / 2 - 15 )
-end
-
-function COLOUR_PANEL:SetColour( colour )
-	self.setcolour = colour
-end
-
-function COLOUR_PANEL:Paint()
-	for k, v in pairs (self.colour) do
-		self.colour[k] = v + (self.setcolour[k] - v) / 10
-	end
-
-	draw.RoundedBox(6, 0, 0, self:GetWide(), self:GetTall(), self.colour)
-	draw.RoundedBox(6, 5, 15, self:GetWide() - 10, self:GetTall() - 20, BGColor)
-end
-
-vgui.Register("PA_Colour_Panel", COLOUR_PANEL, "DPanel")
-
---[[---------------------------------------------------------
-   Name: Constraints Panels
-   Standard panels for constraints tab
----------------------------------------------------------]]
-
-local CONSTRAINT_TITLE_TEXT = {}
-function CONSTRAINT_TITLE_TEXT:Init()
-	self:SetSize( self:GetParent():GetWide(), 15 )
-	self:SetFont("Default")
-	self:SetContentAlignment(2)
-end
-
-vgui.Register("PA_Constraint_Title_Text", CONSTRAINT_TITLE_TEXT, "DLabel")
-
-
-local CONSTRAINTS_SHEET = {}
-
-function CONSTRAINTS_SHEET:Paint( w, h )
-	draw.RoundedBox( 6, 0, 0, w, h, Color( 140, 140, 140, 255 ) )
-end
-
--- Taken from gamemodes/sandbox/gamemode/spawnmenu/controls/control_presets.lua
-function CONSTRAINTS_SHEET:AddComboBox( data )
-	data = table.LowerKeyNames( data )
-	local ctrl = vgui.Create( "ControlPresets", self )
-	ctrl:SetPreset( data.folder )
-	if ( data.options ) then
-		for k, v in pairs( data.options ) do
-			if ( k ~= "id" ) then -- Some txt file configs still have an `ID'. But these are redundant now.
-				ctrl:AddOption( k, v )
-			end
-		end
-	end
-
-	if ( data.cvars ) then
-		for _, v in pairs( data.cvars ) do
-			ctrl:AddConVar( v )
-		end
-	end
-
-	ctrl:SetWide(300)
-
-	return ctrl
-end
-
-vgui.Register("PA_Constraints_Sheet", CONSTRAINTS_SHEET, "DPanel")
-
-local CONSTRAINT_SLIDER = {}
-
-function CONSTRAINT_SLIDER:Init()
-	-- self:SetSize(130, 100) -- Keep the second number at 100
-	self.Label:SetSize( 100 )
-	self:SetMinMax( 0, 50000 )
-end
-
--- Base this off PA_XYZ_Slider so the keyboard hook functions apply
-vgui.Register("PA_Constraint_Slider", CONSTRAINT_SLIDER, "PA_XYZ_Slider")
-
---[[---------------------------------------------------------
-   Name: PA_ColourCircle
-   HSV Colour selection wheel for displays tab
----------------------------------------------------------]]
-
-local COLOUR_CIRCLE = {}
-function COLOUR_CIRCLE:Init()
-	local H = attachHCvar:GetInt()
-	local S = attachSCvar:GetInt()
-	self:SetColor( H, S )
-end
-
-function COLOUR_CIRCLE:TranslateValues( x, y )
-	-- Modified version of default TranslateValues function - so it won't print to console all the damn time
-	x = x - 0.5
-	y = y - 0.5
-	local angle = math.atan2( x, y )
-	local length = math.sqrt( x * x + y * y )
-	length = math.Clamp( length, 0, 0.5 )
-	x = 0.5 + math.sin( angle ) * length
-	y = 0.5 + math.cos( angle ) * length
-
-	self.H = math.deg( angle ) + 270
-	self.S = length * 2
-
-	self:OnChange( self.H, self.S )
-
-	return x, y
-end
-
-function COLOUR_CIRCLE:GetColor()
-	return self.H, self.S
-end
-
-function COLOUR_CIRCLE:SetColor( H, S )
-	self.H, self.S = H, S
-
-	local length = S / 2
-	local angle = math.rad( H - 270 )
-
-	local x = 0.5 + math.sin( angle ) * length
-	local y = 0.5 + math.cos( angle ) * length
-
-	--self:SetSlideX( x )
-	--self:SetValue( y )
-
-	self:OnChange( self.H, self.S )
-
-	return x, y
-end
-
-function COLOUR_CIRCLE:OnChange()
-	-- Overwrite in main body
-end
-
-vgui.Register("PA_ColourCircle", COLOUR_CIRCLE, "DColorCube")
-
---[[---------------------------------------------------------
-   Name: PA_ColourControl
-   Full HSV Colour selection display for displays tab
----------------------------------------------------------]]
-
-local HSV_COLOUR_CONTROL = {}
-function HSV_COLOUR_CONTROL:Init()
-	self:SetSize(300, 200)
-	self.ColorMixer = vgui.Create( "DColorMixer", self )
-		self.ColorMixer:SetPos( 0, 35 )
-		self.ColorMixer:SetSize( 250, 150 )
-		self.ColorMixer:SetPalette( false )
-		self.ColorMixer.ValueChanged = function( _, color )
-			local H, S, V = ColorToHSV( color )
-			local A = color.a or 255
-			-- PrintTable( color ) -- print( tostring( color ) )
-			-- PrintTable( self.ColorMixer:GetColor() )
-			-- print( "changed: " .. H .. ", " .. S .. ", " .. V .. ", " .. A )
-			RunConsoleCommand( self.convar .. "_h", H )
-			RunConsoleCommand( self.convar .. "_s", S )
-			RunConsoleCommand( self.convar .. "_v", V )
-			RunConsoleCommand( self.convar .. "_a", A )
-		end
-
-	--[[
-	self.ColourCircle = vgui.Create("PA_ColourCircle", self)
-		self.ColourCircle:SetPos(0, 35)
-		self.ColourCircle:SetSize(150, 150)
-		self.ColourCircle.OnChange = function( panel, H, S )
-			local colour_brightness = HSVToColor( H, S, 1 )
-			self.Bar_Brightness:SetFGColor( colour_brightness )
-
-			local V = self.Bar_Brightness:GetColor()
-			local colour_alpha = HSVToColor( H, S, V )
-			self.Bar_Alpha:SetFGColor( colour_alpha )
-
-			RunConsoleCommand( self.convar .. "_h", H )
-			RunConsoleCommand( self.convar .. "_s", S )
-		end
-
-	self.Bar_Brightness = vgui.Create( "DAlphaBar", self )
-		-- self.Bar_Brightness:SetBGColor( "vgui/hsv-brightness" )
-		self.Bar_Brightness:SetPaintBackground( "vgui/hsv-brightness" )
-		self.Bar_Brightness:SetPos(160, 45)
-		self.Bar_Brightness:SetSize(25, 130)
-		self.Bar_Brightness.GetColor = function()
-			return 1 - self.Bar_Brightness:GetValue()
-		end
-
-		self.Bar_Brightness.SetColor = function( panel, V )
-			self.Bar_Brightness:SetValue( 1 - V )
-			self.Bar_Brightness:OnChange( V * 255 )
-		end
-
-		self.Bar_Brightness.OnChange = function( panel, brightness )
-			local V = brightness / 255
-			local H, S = self.ColourCircle:GetColor()
-			local colour_alpha = HSVToColor( H, S, V )
-			self.Bar_Alpha:SetFGColor( colour_alpha )
-
-			RunConsoleCommand( self.convar .. "_v", V )
-		end
-
-		-- Remove default alpha bar background image
- 	--	self.Bar_Brightness.PerformLayout = function()
-	--		DSlider.PerformLayout( self.Bar_Brightness )
-	--	end
-	--	self.Bar_Brightness.imgBackground:Remove()
-
-	AddMenuText( "HSV", 130, 182, self )
-
-	self.Bar_Alpha = vgui.Create( "DAlphaBar", self )
-		self.Bar_Alpha:SetPos(210, 45)
-		self.Bar_Alpha:SetSize(25, 130)
-		self.Bar_Alpha.GetColor = function()
-			return ( 1 - self.Bar_Alpha:GetValue() ) * 255
-		end
-
-		self.Bar_Alpha.SetColor = function( panel, alpha )
-			self.Bar_Alpha:SetValue( 1 - alpha / 255 )
-			self.Bar_Alpha:OnChange( alpha )
-		end
-
-		self.Bar_Alpha.OnChange = function( panel, alpha )
-			RunConsoleCommand( self.convar .. "_a", alpha )
-		end
-
-	AddMenuText( "Alpha", 207, 182, self )
-	]]
-
-	self.button_defaults = vgui.Create( "PA_Function_Button", self )
-		self.button_defaults:SetPos(200, 5)
-		self.button_defaults:SetSize(90, 25)
-		self.button_defaults:SetText( "Reset Defaults" )
-		self.button_defaults:SetFunction( function()
-			self:SetColor( self.default_H, self.default_S, self.default_V, self.default_A )
-			return true
-		end )
-end
-
-function HSV_COLOUR_CONTROL:SetConVar( convar )
-	self.convar = convar
-end
-
-function HSV_COLOUR_CONTROL:SetDefaults( H, S, V, A )
-	self.default_H = H
-	self.default_S = S
-	self.default_V = V
-	self.default_A = A
-end
-
-function HSV_COLOUR_CONTROL:SetColor( H, S, V, A )
-	local col = HSVToColor( H, S, V )
-	col.a = A
-	self.ColorMixer:SetColor( col )
-	-- self.ColourCircle:SetColor( H, S )
-	-- self.Bar_Brightness:SetColor( V )
-	-- self.Bar_Alpha:SetColor( A )
-end
-
-function HSV_COLOUR_CONTROL:GetColor()
-	local col = self.ColorMixer:GetColor()
-	local H, S, V = ColorToHSV( col )
-	local A = col.a
-	-- return self.ColorMixer:GetColor()
-	-- local H, S = self.ColourCircle:GetColor()
-	-- local V = self.Bar_Brightness:GetColor()
-	-- local A = self.Bar_Alpha:GetColor()
-	return H, S, V, A
-end
-
-function HSV_COLOUR_CONTROL:Paint()
-end
-
-vgui.Register("PA_ColourControl", HSV_COLOUR_CONTROL, "DPanel")
-
---[[---------------------------------------------------------
-   Name: PA_Construct_Multiselect
-   Multi construct selection for displays/move constructs tabs
----------------------------------------------------------]]
-
-local CONSTRUCT_MULTISELECT = {}
-function CONSTRUCT_MULTISELECT:Init()
-	self:SetSize(555, 215)
-
-	self.colour_panel_1 = vgui.Create( "PA_Colour_Panel", self )
-		self.colour_panel_1:SetPos(0, 0)
-		self.colour_panel_1:SetSize(150, 215)
-		self.colour_panel_1:SetColour( BGColor_Point )
-
-	self.list_points = vgui.Create( "PA_Construct_ListView", self.colour_panel_1 )
-		self.list_points:Text( "Points", "Point", self.colour_panel_1 )
-		self.list_points:SetTooltip( "Double click to deselect" )
-		self.list_points:SetPos(20, 30)
-		self.list_points:SetMultiSelect(true)
-		self.list_points.DoDoubleClick = function()
-			self.list_points:ClearSelection()
-		end
-
-	self.colour_panel_2 = vgui.Create( "PA_Colour_Panel", self )
-		self.colour_panel_2:SetPos(150, 0)
-		self.colour_panel_2:SetSize(150, 215)
-		self.colour_panel_2:SetColour( BGColor_Line )
-
-	self.list_lines = vgui.Create( "PA_Construct_ListView", self.colour_panel_2 )
-		self.list_lines:Text( "Lines", "Line", self.colour_panel_2 )
-		self.list_lines:SetTooltip( "Double click to deselect" )
-		self.list_lines:SetPos(20, 30)
-		self.list_lines:SetMultiSelect(true)
-		self.list_lines.DoDoubleClick = function()
-			self.list_lines:ClearSelection()
-		end
-
-	self.colour_panel_3 = vgui.Create( "PA_Colour_Panel", self )
-		self.colour_panel_3:SetPos(300, 0)
-		self.colour_panel_3:SetSize(150, 215)
-		self.colour_panel_3:SetColour( BGColor_Plane )
-
-	self.list_planes = vgui.Create( "PA_Construct_ListView", self.colour_panel_3 )
-		self.list_planes:Text( "Planes", "Plane", self.colour_panel_3 )
-		self.list_planes:SetTooltip( "Double click to deselect" )
-		self.list_planes:SetPos(20, 30)
-		self.list_planes:SetMultiSelect(true)
-		self.list_planes.DoDoubleClick = function()
-			self.list_planes:ClearSelection()
-		end
-
-
-	self.button_selectall = vgui.Create( "PA_Function_Button", self )
-		self.button_selectall:SetPos(462, 30)
-		self.button_selectall:SetSize(80, 30)
-		self.button_selectall:SetText( "Select All" )
-		self.button_selectall:SetTooltip( "Select all constructs" )
-		self.button_selectall:SetFunction( function()
-			self:SelectAll( true )
-			return true
-		end )
-
-	self.button_deselectall = vgui.Create( "PA_Function_Button", self )
-		self.button_deselectall:SetPos(462, 65)
-		self.button_deselectall:SetSize(80, 30)
-		self.button_deselectall:SetText( "Deselect All" )
-		self.button_deselectall:SetTooltip( "Deselect all constructs" )
-		self.button_deselectall:SetFunction( function()
-			self:SelectAll( false )
-			return true
-		end )
-
-	self.button_attach = vgui.Create( "PA_Function_Button", self )
-		self.button_attach:SetPos(462, 100)
-		self.button_attach:SetSize(80, 30)
-		self.button_attach:SetText( "Attach" )
-		self.button_attach:SetTooltip( "Attach constructs to the selected entity (detach if no ent selected)" )
-		self.button_attach:SetFunction( function()
-			local ID
-
-			for _, v in pairs( self.list_points:GetSelected() ) do
-				ID = v:GetID()
-				if PrecisionAlign.Functions.construct_exists( "Point", ID ) then
-					PrecisionAlign.Functions.attach_point( ID, PrecisionAlign.ActiveEnt )
-				end
-			end
-
-			for _, v in pairs( self.list_lines:GetSelected() ) do
-				ID = v:GetID()
-				if PrecisionAlign.Functions.construct_exists( "Line", ID ) then
-					PrecisionAlign.Functions.attach_line( ID, PrecisionAlign.ActiveEnt )
-				end
-			end
-
-			for _, v in pairs( self.list_planes:GetSelected() ) do
-				ID = v:GetID()
-				if PrecisionAlign.Functions.construct_exists( "Plane", ID ) then
-					PrecisionAlign.Functions.attach_plane( ID, PrecisionAlign.ActiveEnt )
-				end
-			end
-
-			return true
-		end )
-
-	self.button_delete = vgui.Create( "PA_Function_Button", self )
-		self.button_delete:SetPos(462, 135)
-		self.button_delete:SetSize(80, 30)
-		self.button_delete:SetText( "Delete" )
-		self.button_delete:SetTooltip( "Delete the selected constructs" )
-		self.button_delete:SetFunction( function()
-			local ID
-
-			for _, v in pairs( self.list_points:GetSelected() ) do
-				ID = v:GetID()
-				PrecisionAlign.Functions.delete_point( ID )
-			end
-
-			for _, v in pairs( self.list_lines:GetSelected() ) do
-				ID = v:GetID()
-				PrecisionAlign.Functions.delete_line( ID )
-			end
-
-			for _, v in pairs( self.list_planes:GetSelected() ) do
-				ID = v:GetID()
-				PrecisionAlign.Functions.delete_plane( ID )
-			end
-
-			return true
-		end )
-
-	self.button_deleteall = vgui.Create( "PA_Function_Button", self )
-		self.button_deleteall:SetPos(462, 170)
-		self.button_deleteall:SetSize(80, 30)
-		self.button_deleteall:SetText( "Delete All" )
-		self.button_deleteall:SetTooltip( "Delete all existing constructs" )
-		self.button_deleteall:SetFunction( function()
-
-			PrecisionAlign.Functions.delete_points()
-			PrecisionAlign.Functions.delete_lines()
-			PrecisionAlign.Functions.delete_planes()
-
-			return true
-		end )
-end
-
-function CONSTRUCT_MULTISELECT:SelectAll( value )
-	local function SelectLines( panel, construct_table )
-		for id = 1, 9 do
-			local line = panel.Sorted[ id ]
-			line:SetSelected( value )
-			if self.visibility then
-				construct_table[id].visible = value
-			end
-		end
-	end
-
-	SelectLines( self.list_points, PrecisionAlign.Points )
-	SelectLines( self.list_lines, PrecisionAlign.Lines )
-	SelectLines( self.list_planes, PrecisionAlign.Planes )
-end
-
-function CONSTRUCT_MULTISELECT:GetSelection()
-	local selection = {}
-	selection.points = {}
-	selection.lines = {}
-	selection.planes = {}
-
-	for _, v in pairs( self.list_points:GetSelected() ) do
-		local ID = v:GetID()
-		if PrecisionAlign.Functions.construct_exists( "Point", ID  ) then
-			table.insert( selection.points, ID )
-		end
-	end
-
-	for _, v in pairs( self.list_lines:GetSelected() ) do
-		local ID = v:GetID()
-		if PrecisionAlign.Functions.construct_exists( "Line", ID  ) then
-			table.insert( selection.lines, ID )
-		end
-	end
-
-	for _, v in pairs( self.list_planes:GetSelected() ) do
-		local ID = v:GetID()
-		if PrecisionAlign.Functions.construct_exists( "Plane", ID  ) then
-			table.insert( selection.planes, ID )
-		end
-	end
-
-	if ( #selection.points + #selection.lines + #selection.planes ) == 0 then
-		selection = nil
-	end
-
-	return selection
-end
-
-function CONSTRUCT_MULTISELECT:Paint()
-end
-
-vgui.Register("PA_Construct_Multiselect", CONSTRUCT_MULTISELECT, "DPanel")
-
-
---********************************************************************************************************************--
--- Custom CPanel Functions
---********************************************************************************************************************--
-
-
--- Reduce width for lower resolutions to compensate for side scrollbar
-local CPanel_Width
-if ScrH() < 1050 then
-	CPanel_Width = 281 --265
-else
-	CPanel_Width = 297 --281
-end
-
-local function create_buttons_standard( panel, buttonText )
-	panel.button_view = vgui.Create( "PA_Function_Button", panel )
-		panel.button_view:SetPos(0, 120)
-		panel.button_view:SetSize(CPanel_Width / 2, 20)
-		panel.button_view:SetText( "View" )
-		panel.button_view:SetTooltip( "View the selected " .. buttonText )
-
-	panel.button_delete = vgui.Create( "PA_Function_Button", panel )
-		panel.button_delete:SetPos(CPanel_Width / 2, 120)
-		panel.button_delete:SetSize(CPanel_Width / 2, 20)
-		panel.button_delete:SetText( "Delete" )
-		panel.button_delete:SetTooltip( "Delete the selected " .. buttonText )
-
-	panel.button_attach = vgui.Create( "PA_Function_Button", panel )
-		panel.button_attach:SetPos(0, 140)
-		panel.button_attach:SetSize(CPanel_Width / 2, 20)
-		panel.button_attach:SetText( "Attach" )
-		panel.button_attach:SetTooltip( "Attach " .. buttonText .. " to selected entity (detach if no ent selected)" )
-
-	panel.button_deleteall = vgui.Create( "PA_Function_Button", panel )
-		panel.button_deleteall:SetPos(CPanel_Width / 2, 140)
-		panel.button_deleteall:SetSize(CPanel_Width / 2, 20)
-		panel.button_deleteall:SetText( "Delete All" )
-		panel.button_deleteall:SetTooltip( "Delete all " .. buttonText .. "s" )
-end
-
-
---********************************************************************************************************************--
--- CPanel Controls
---********************************************************************************************************************--
-
-
--- Open a particular tab in the manipulation panel
-local function Open_Manipulation_Tab( Tab )
-	PA_manipulation_panel.panel:SetActiveTab( Tab )
-	if not PA_manipulation_panel:IsVisible() then
-		PA_manipulation_panel:SetVisible(true)
-	end
-end
-
--- Perform double click function on a listview within the manipulation panel
-local function Listview_DoDoubleClick( panel, LineID )
-	panel:ClearSelection()
-
-	local Line = panel:GetLine( LineID )
-	panel:SelectItem( Line )
-	panel:DoDoubleClick( Line, LineID )
-end
-
-local TOOL_POINT_PANEL = {}
-function TOOL_POINT_PANEL:Init()
-	self:SetSize( CPanel_Width, 180 )
-	AddMenuText("POINT", CPanel_Width / 2 - 18, 0, self)
-
-	self.list_primarypoint = vgui.Create("PA_Construct_ListView", self)
-		self.list_primarypoint:Text( "", "Point" )
-		self.list_primarypoint:SetTooltip( "Primary selection (functions will only affect this point)" )
-		self.list_primarypoint:SetHeaderHeight( 1 )
-		self.list_primarypoint:SetPos(0, 15)
-		self.list_primarypoint:SetSize(CPanel_Width / 2 - 5, 100)
-		self.list_primarypoint:SetMultiSelect(false)
-		self.list_primarypoint:SetIndicatorOffset( 15 )
-		self.list_primarypoint.OnRowSelected = function( _, line )
-			PrecisionAlign.SelectedPoint = line
-		end
-
-		self.list_primarypoint.DoDoubleClick = function( _, LineID )
-			local panel = PA_manipulation_panel.points_tab
-			Open_Manipulation_Tab( panel.tab )
-			Listview_DoDoubleClick( panel.list_primarypoint, LineID )
-		end
-		self.list_primarypoint:SelectFirstItem()
-
-	self.list_secondarypoint = vgui.Create("PA_Construct_ListView", self)
-		self.list_secondarypoint:Text( "", "Point" )
-		self.list_secondarypoint:SetTooltip( "Secondary selection" )
-		self.list_secondarypoint:SetHeaderHeight( 1 )
-		self.list_secondarypoint:SetPos(CPanel_Width / 2 + 5, 15)
-		self.list_secondarypoint:SetSize(CPanel_Width / 2 - 5, 100)
-		self.list_secondarypoint:SetMultiSelect(false)
-		self.list_secondarypoint:SetIndicatorOffset( 15 )
-
-		self.list_secondarypoint.DoDoubleClick = function( _, LineID )
-			local panel = PA_manipulation_panel.points_tab
-			Open_Manipulation_Tab( panel.tab )
-			Listview_DoDoubleClick( panel.list_primarypoint, LineID )
-		end
-		self.list_secondarypoint:SelectFirstItem()
-
-	create_buttons_standard( self, "point" )
-
-		self.button_view:SetFunction( function()
-			if not PrecisionAlign.Functions.construct_exists( "Point", PrecisionAlign.SelectedPoint ) then return false end
-			local point = PrecisionAlign.Functions.point_global( PrecisionAlign.SelectedPoint )
-			return PrecisionAlign.Functions.set_playerview( point.origin )
-		end )
-
-		self.button_delete:SetFunction( function()
-			return PrecisionAlign.Functions.delete_point( PrecisionAlign.SelectedPoint )
-		end )
-
-		self.button_attach:SetFunction( function()
-			return PrecisionAlign.Functions.attach_point( PrecisionAlign.SelectedPoint, PrecisionAlign.ActiveEnt )
-		end )
-
-		self.button_deleteall:SetFunction( function()
-			self.list_primarypoint:SelectFirstItem()
-			self.list_secondarypoint:SelectFirstItem()
-			return PrecisionAlign.Functions.delete_points()
-		end )
-
-	self.button_moveentity = vgui.Create( "PA_Move_Button", self )
-		self.button_moveentity:SetPos(0, 160)
-		self.button_moveentity:SetSize(CPanel_Width, 20)
-		self.button_moveentity:SetText( "Move Entity" )
-		self.button_moveentity:SetTooltip( "Move entity by Primary -> Secondary" )
-		self.button_moveentity:SetFunction( function()
-			PrecisionAlign.SelectedPoint2 = self.list_secondarypoint:GetSelectedLine()
-			if PrecisionAlign.SelectedPoint == PrecisionAlign.SelectedPoint2 then
-				Warning("Cannot move between the same point!")
-				return false
-			end
-
-			local point1 = PrecisionAlign.Functions.point_global( PrecisionAlign.SelectedPoint )
-			local point2 = PrecisionAlign.Functions.point_global( PrecisionAlign.SelectedPoint2 )
-
-			if not point1 or not point2 then
-				Warning("Points not correctly defined")
-				return false
-			end
-
-			if not PrecisionAlign.Functions.move_entity(point1.origin, point2.origin, PrecisionAlign.ActiveEnt) then return false end
-		end )
-end
-
-function TOOL_POINT_PANEL:Paint()
-	draw.RoundedBox(6, 50, 0, CPanel_Width - 100, 14, BGColor_Point)
-end
-
-vgui.Register("PA_Tool_Point_Panel", TOOL_POINT_PANEL, "DPanel")
-
-
-local TOOL_LINE_PANEL = {}
-function TOOL_LINE_PANEL:Init()
-	self:SetSize( CPanel_Width, 180 )
-	AddMenuText("LINE", CPanel_Width / 2 - 12, 0, self)
-
-	self.list_line = vgui.Create( "PA_Construct_ListView", self )
-		self.list_line:Text( "", "Line" )
-		self.list_line:SetHeaderHeight( 1 )
-		self.list_line:SetPos(0, 15)
-		self.list_line:SetSize(CPanel_Width, 100)
-		self.list_line:SetMultiSelect(false)
-		self.list_line:SetIndicatorOffset( 15 )
-		self.list_line.OnRowSelected = function( _, line )
-			PrecisionAlign.SelectedLine = line
-		end
-
-		self.list_line.DoDoubleClick = function( _, LineID )
-			local panel = PA_manipulation_panel.lines_tab
-			Open_Manipulation_Tab( panel.tab )
-			Listview_DoDoubleClick( panel.list_primary, LineID )
-		end
-		self.list_line:SelectFirstItem()
-
-	create_buttons_standard( self, "line" )
-
-		self.button_view:SetFunction( function()
-			if not PrecisionAlign.Functions.construct_exists( "Line", PrecisionAlign.SelectedLine ) then return false end
-			local line = PrecisionAlign.Functions.line_global( PrecisionAlign.SelectedLine )
-			return PrecisionAlign.Functions.set_playerview( line.startpoint )
-		end )
-
-		self.button_delete:SetFunction( function()
-			return PrecisionAlign.Functions.delete_line(PrecisionAlign.SelectedLine)
-		end )
-
-		self.button_attach:SetFunction( function()
-			return PrecisionAlign.Functions.attach_line(PrecisionAlign.SelectedLine, PrecisionAlign.ActiveEnt)
-		end )
-
-		self.button_deleteall:SetFunction( function()
-			self.list_line:SelectFirstItem()
-			return PrecisionAlign.Functions.delete_lines()
-		end )
-
-	self.button_moveentity = vgui.Create( "PA_Move_Button", self )
-		self.button_moveentity:SetPos(0, 160)
-		self.button_moveentity:SetSize(CPanel_Width, 20)
-		self.button_moveentity:SetText( "Move Entity" )
-		self.button_moveentity:SetTooltip( "Move entity by line" )
-		self.button_moveentity:SetFunction( function()
-			local line = PrecisionAlign.Functions.line_global(PrecisionAlign.SelectedLine)
-			if not line then
-				Warning("Line not correctly defined")
-				return false
-			end
-
-			local point1 = line.startpoint
-			local point2 = line.endpoint
-			if not PrecisionAlign.Functions.move_entity(point1, point2, PrecisionAlign.ActiveEnt) then return false end
-		end )
-end
-
-function TOOL_LINE_PANEL:Paint()
-	draw.RoundedBox(6, 50, 0, CPanel_Width - 100, 14, BGColor_Line)
-end
-
-vgui.Register("PA_Tool_Line_Panel", TOOL_LINE_PANEL, "DPanel")
-
-
-local TOOL_PLANE_PANEL = {}
-function TOOL_PLANE_PANEL:Init()
-	self:SetSize( CPanel_Width, 160 )
-	AddMenuText("PLANE", CPanel_Width / 2 - 17, 0, self)
-
-	self.list_plane = vgui.Create( "PA_Construct_ListView", self )
-		self.list_plane:Text( "", "Plane" )
-		self.list_plane:SetHeaderHeight( 1 )
-		self.list_plane:SetPos(0, 15)
-		self.list_plane:SetSize(CPanel_Width, 100)
-		self.list_plane:SetMultiSelect(false)
-		self.list_plane:SetIndicatorOffset( 15 )
-		self.list_plane.OnRowSelected = function( _, line )
-			PrecisionAlign.SelectedPlane = line
-		end
-
-		self.list_plane.DoDoubleClick = function( _, LineID )
-			local panel = PA_manipulation_panel.planes_tab
-			Open_Manipulation_Tab( panel.tab )
-			Listview_DoDoubleClick( panel.list_primary, LineID )
-		end
-		self.list_plane:SelectFirstItem()
-
-	create_buttons_standard( self, "plane" )
-
-		self.button_view:SetFunction( function()
-			if not PrecisionAlign.Functions.construct_exists( "Plane", PrecisionAlign.SelectedPlane ) then return false end
-			local plane = PrecisionAlign.Functions.plane_global( PrecisionAlign.SelectedPlane )
-			return PrecisionAlign.Functions.set_playerview( plane.origin )
-		end )
-
-		self.button_delete:SetFunction( function()
-			return PrecisionAlign.Functions.delete_plane(PrecisionAlign.SelectedPlane)
-		end )
-
-		self.button_attach:SetFunction( function()
-			return PrecisionAlign.Functions.attach_plane(PrecisionAlign.SelectedPlane, PrecisionAlign.ActiveEnt)
-		end )
-
-		self.button_deleteall:SetFunction( function()
-			self.list_plane:SelectFirstItem()
-			return PrecisionAlign.Functions.delete_planes()
-		end )
-end
-
-function TOOL_PLANE_PANEL:Paint()
-	draw.RoundedBox(6, 50, 0, CPanel_Width - 100, 14, BGColor_Plane)
-end
-
-vgui.Register("PA_Tool_Plane_Panel", TOOL_PLANE_PANEL, "DPanel")
-
-
-local TOOL_LIST = {}
-function TOOL_LIST:Init()
-	self.list_tooltype = vgui.Create("DListView", self)
-	self.list_tooltype:SetPos(0, 0)
-	self.list_tooltype:Dock(FILL)
-	self.list_tooltype:SetTooltip("Select left-click function")
-	self.list_tooltype:SetHeaderHeight( 0 )
-	self.list_tooltype:SetSortable(false)
-	self.list_tooltype:SetMultiSelect(false)
-	self.list_tooltype:AddColumn("")
-
-	for ToolMode, ToolModeObj in PrecisionAlign.GetToolModes() do
-		local Line = self.list_tooltype:AddLine()
-		function Line:OnSelect()
-			RunConsoleCommand( PA_ .. "toolname", ToolMode)
-		end
-
-		if tooltypeCvar:GetString() == ToolMode then
-			self.list_tooltype:SelectItem(Line)
-		end
-		Line.ToolMode = ToolMode
-		local DrawColorOutline = ToolModeObj:GetBackgroundColor():Copy()
-		local DrawColor = DrawColorOutline:Copy()
-
-		Line.Paint = function(self, width, height)
-			local TextColor
-			if self.Highlighted then
-				DrawColor.a = 255
-			elseif self:IsSelected() then
-				DrawColor.a = 150
-				TextColor = color_white
-			else
-				DrawColor.a = 200
-				TextColor = color_black
-			end
-			surface.SetDrawColor(DrawColor)
-			surface.DrawRect(0, 0, width, height)
-
-			surface.SetDrawColor(DrawColorOutline)
-			surface.DrawOutlinedRect(0, 0, width - 2, height)
-
-			draw.SimpleText(ToolMode, "DermaDefault", 4, height / 2, TextColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-		end
-	end
-	self:SetSize(CPanel_Width, #self.list_tooltype:GetLines() * 17)
-end
-
-function TOOL_LIST:Paint()
-
-end
-
-vgui.Register("PA_CPanel_tool_list", TOOL_LIST, "DPanel")
-
-local TOOL_OPTIONS = {}
-function TOOL_OPTIONS:Init()
-	self:SetSize( CPanel_Width, 100 )
-
-	self.checkbox_display = vgui.Create( "DCheckBoxLabel", self )
-		self.checkbox_display:SetPos(0, 2)
-		self.checkbox_display:SetText( "Enable construct displays" )
-		self.checkbox_display:SetDark( true )
-		self.checkbox_display:SetValue( 1 )
-		self.checkbox_display:SizeToContents()
-		self.checkbox_display:SetTooltip( "Show/Hide all constructs" )
-		function self.checkbox_display:OnChange()
-			LocalPlayer():ConCommand( PA_ .. "displayhud" )
-		end
-
-	self.checkbox_snap_edge = vgui.Create( "DCheckBoxLabel", self )
-		self.checkbox_snap_edge:SetPos(0, 21)
-		self.checkbox_snap_edge:SetText( "Snap to Edges" )
-		self.checkbox_snap_edge:SetDark( true )
-		self.checkbox_snap_edge:SizeToContents()
-		self.checkbox_snap_edge:SetTooltip( "Snap to the edges of props when placing constructs" )
-		self.checkbox_snap_edge:SetConVar( PA_ .. "edge_snap" )
-
-	self.checkbox_snap_centre = vgui.Create( "DCheckBoxLabel", self )
-		self.checkbox_snap_centre:SetPos(0, 40)
-		self.checkbox_snap_centre:SetText( "Snap to Centre Lines" )
-		self.checkbox_snap_centre:SetDark( true )
-		self.checkbox_snap_centre:SizeToContents()
-		self.checkbox_snap_centre:SetTooltip( "Snap to the centre-lines of props when placing constructs" )
-		self.checkbox_snap_centre:SetConVar( PA_ .. "centre_snap" )
-
-	self.slider_snap_dist = vgui.Create( "DNumSlider", self )
-		self.slider_snap_dist:SetPos(0, 59)
-		-- self.slider_snap_dist:SetSize(CPanel_Width, 30)
-		self.slider_snap_dist.Label:SetSize( 80 )
-		self.slider_snap_dist:SetWide( CPanel_Width )
-		self.slider_snap_dist:SetText( "Snap Sensitivity" )
-		self.slider_snap_dist.Label:SetDark( true )
-		self.slider_snap_dist:SetMinMax( 0.1, 100 )
-		self.slider_snap_dist:SetDecimals( 1 )
-		self.slider_snap_dist.Slider:SetNotches( self.slider_snap_dist.Slider:GetWide() / 4 )
-		self.slider_snap_dist:SetTooltip( "Sets the maximum distance for edge/centre snap detection (in units)" )
-		self.slider_snap_dist:SetConVar( PA_ .. "snap_distance" )
-
-	-- Help button
-	self.button_help = vgui.Create( "PA_Function_Button", self )
-		self.button_help:SetSize( 60, 20 )
-		self.button_help:SetPos( CPanel_Width - self.button_help:GetWide(), 2 )
-		self.button_help:SetText( "Help" )
-		self.button_help:SetTooltip( "Open online help using the Steam in-game browser." )
-		self.button_help:SetFunction( function()
-			return gui.OpenURL( "https://steamcommunity.com/sharedfiles/filedetails/?id=1461659319" )
-		end )
-end
-
-function TOOL_OPTIONS:Paint()
-end
-
-vgui.Register("PA_CPanel_tool_options", TOOL_OPTIONS, "DPanel")
-
-
---********************************************************************************************************************--
--- CPanel Layout
---********************************************************************************************************************--
-
-CPanel:Clear()
-
-local tool_list = vgui.Create( "PA_CPanel_tool_list" )
-CPanel:AddItem( tool_list )
-CPanel.tool_list = tool_list
-
-local tool_options = vgui.Create( "PA_CPanel_tool_options" )
-CPanel:AddItem( tool_options )
-CPanel.tool_options = tool_options
-
-local point_window = vgui.Create( "PA_Tool_Point_Panel" )
-CPanel:AddItem( point_window )
-CPanel.point_window = point_window
-
-local line_window = vgui.Create( "PA_Tool_Line_Panel" )
-CPanel:AddItem( line_window )
-CPanel.line_window = line_window
-
-local plane_window = vgui.Create( "PA_Tool_Plane_Panel" )
-CPanel:AddItem( plane_window )
-CPanel.plane_window = plane_window
-
---********************************************************************************************************************--
--- Usermessages
---********************************************************************************************************************--
-
+-- Set up the full UI.
+do
+    CPanel:Clear()
+
+    local ToolList = vgui.Create "PA_CPanel_tool_list"
+    CPanel:AddItem(ToolList)
+    CPanel.ToolList = ToolList
+
+    local CheckboxHelpContainer = vgui.Create "DPanel"
+    CPanel:AddItem(CheckboxHelpContainer)
+    CheckboxHelpContainer:SetPaintBackground(false)
+    CheckboxHelpContainer:Dock(TOP)
+    CheckboxHelpContainer:SetSize(0, 54)
+
+    local HelpContainer = CheckboxHelpContainer:Add("DPanel")
+
+    HelpContainer:SetPaintBackground(false)
+    HelpContainer:Dock(RIGHT)
+    HelpContainer:SetSize(64, 0)
+
+    local Help = HelpContainer:Add("DButton")
+    Help:SetText("Help")
+    Help:Dock(TOP)
+
+    local Checkboxes = CheckboxHelpContainer:Add("DPanel")
+
+    Checkboxes:SetPaintBackground(false)
+    Checkboxes:Dock(FILL)
+
+    local EnableConstructDisplays = Checkboxes:Add("DCheckBoxLabel")
+    EnableConstructDisplays:Dock(TOP)
+    EnableConstructDisplays:SetDark(true)
+    EnableConstructDisplays:SetText("Enable Construct Displays")
+    EnableConstructDisplays:SetValue(1)
+    EnableConstructDisplays:SetTooltip("Show/Hide all constructs")
+    EnableConstructDisplays:DockMargin(0, 0, 0, 4)
+    function EnableConstructDisplays:OnChange()
+        LocalPlayer():ConCommand(PA_ .. "displayhud")
+    end
+
+    local SnapToEdges = Checkboxes:Add("DCheckBoxLabel")
+    SnapToEdges:Dock(TOP)
+    SnapToEdges:SetDark(true)
+    SnapToEdges:SetText("Snap to Edges")
+    SnapToEdges:SetTooltip("Snap to the edges of props when placing constructs")
+    SnapToEdges:SetConVar(PA_ .. "edge_snap")
+    SnapToEdges:DockMargin(0, 0, 0, 4)
+
+    local SnapToCentreLines = Checkboxes:Add("DCheckBoxLabel")
+    SnapToCentreLines:Dock(TOP)
+    SnapToCentreLines:SetDark(true)
+    SnapToCentreLines:SetText("Snap to Centre Lines")
+    SnapToCentreLines:SetTooltip("Snap to the centre-lines of props when placing constructs")
+    SnapToCentreLines:SetConVar(PA_ .. "centre_snap")
+    SnapToCentreLines:DockMargin(0, 0, 0, 4)
+
+    local SnapSensitivity = vgui.Create "DNumSlider"
+    CPanel:AddItem(SnapSensitivity)
+    SnapSensitivity:Dock(TOP)
+    SnapSensitivity:SetDark(true)
+    SnapSensitivity:SetText("Snap Sensitivity")
+    SnapSensitivity:SetMinMax(0.1, 100)
+    SnapSensitivity:SetDecimals(1)
+    SnapSensitivity:SetSize(0, 24)
+    SnapSensitivity.Slider:SetNotches(SnapSensitivity.Slider:GetWide() / 4)
+    SnapSensitivity:SetTooltip("Sets the maximum distance for edge/centre snap detection (in units)")
+    SnapSensitivity:SetConVar(PA_ .. "snap_distance")
+
+    local Points = vgui.Create("PA_Tool_Construct_Panel")
+    CPanel.point_window = Points
+    CPanel:AddItem(Points)
+    Points:SetConstructType(PrecisionAlign.CONSTRUCT_POINT)
+
+    local function SelectPoint(ID) PrecisionAlign.SelectedPoint = ID end
+    local function SelectPoint2() end
+    local function PointDbClick(ID)
+        local panel = PA_manipulation_panel.points_tab
+        Open_Manipulation_Tab(panel.tab)
+        Listview_DoDoubleClick(panel.list_primarypoint, ID)
+    end
+    Points.list_primarypoint, Points.list_secondarypoint = Points:SetSelectionMode(SelectPoint, PointDbClick, SelectPoint2, PointDbClick) -- Assignment for backwards compat
+    do
+        local View, Delete, Attach, DeleteAll, MoveEntity = Points:AddButtons(true)
+        View:SetFunction(function()
+            if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_POINT, PrecisionAlign.SelectedPoint ) then return false end
+            local point = PrecisionAlign.Functions.point_global( PrecisionAlign.SelectedPoint )
+            return PrecisionAlign.Functions.set_playerview( point.origin )
+        end)
+
+        Delete:SetFunction(function()
+            return PrecisionAlign.Functions.delete_point( PrecisionAlign.SelectedPoint )
+        end)
+
+        Attach:SetFunction(function()
+            return PrecisionAlign.Functions.attach_point( PrecisionAlign.SelectedPoint, PrecisionAlign.ActiveEnt )
+        end)
+
+        DeleteAll:SetFunction(function()
+            Points.list_primarypoint:SelectFirstItem()
+            Points.list_secondarypoint:SelectFirstItem()
+            return PrecisionAlign.Functions.delete_points()
+        end)
+
+        MoveEntity:SetFunction(function()
+            PrecisionAlign.SelectedPoint2 = Points.list_secondarypoint:GetSelectedLine()
+            if PrecisionAlign.SelectedPoint == PrecisionAlign.SelectedPoint2 then
+                Warning("Cannot move between the same point!")
+                return false
+            end
+
+            local point1 = PrecisionAlign.Functions.point_global( PrecisionAlign.SelectedPoint )
+            local point2 = PrecisionAlign.Functions.point_global( PrecisionAlign.SelectedPoint2 )
+
+            if not point1 or not point2 then
+                Warning("Points not correctly defined")
+                return false
+            end
+
+            if not PrecisionAlign.Functions.move_entity(point1.origin, point2.origin, PrecisionAlign.ActiveEnt) then return false end
+        end)
+    end
+    local Lines  = vgui.Create("PA_Tool_Construct_Panel")
+    CPanel.line_window = Lines
+    CPanel:AddItem(Lines)
+    Lines:SetConstructType(PrecisionAlign.CONSTRUCT_LINE)
+    Lines.list_line = Lines:SetSelectionMode(false) -- Assignment for backwards compat
+    do
+        local View, Delete, Attach, DeleteAll = Lines:AddButtons()
+        View:SetFunction(function()
+            if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, PrecisionAlign.SelectedLine ) then return false end
+            local line = PrecisionAlign.Functions.line_global( PrecisionAlign.SelectedLine )
+            return PrecisionAlign.Functions.set_playerview( line.startpoint )
+        end)
+
+        Delete:SetFunction(function()
+            return PrecisionAlign.Functions.delete_line(PrecisionAlign.SelectedLine)
+        end)
+
+        Attach:SetFunction(function()
+            return PrecisionAlign.Functions.attach_line(PrecisionAlign.SelectedLine, PrecisionAlign.ActiveEnt)
+        end)
+
+        DeleteAll:SetFunction(function()
+            Lines.list_line:SelectFirstItem()
+            return PrecisionAlign.Functions.delete_lines()
+        end)
+    end
+
+    local Planes = vgui.Create("PA_Tool_Construct_Panel")
+    CPanel.plane_window = Planes
+    CPanel:AddItem(Planes)
+    Planes:SetConstructType(PrecisionAlign.CONSTRUCT_PLANE)
+    Planes.list_plane = Planes:SetSelectionMode(false) -- Assignment for backwards compat
+    do
+        local View, Delete, Attach, DeleteAll = Planes:AddButtons()
+
+        View:SetFunction(function()
+            if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_PLANE, PrecisionAlign.SelectedPlane ) then return false end
+            local plane = PrecisionAlign.Functions.plane_global( PrecisionAlign.SelectedPlane )
+            return PrecisionAlign.Functions.set_playerview( plane.origin )
+        end)
+
+        Delete:SetFunction(function()
+            return PrecisionAlign.Functions.delete_plane(PrecisionAlign.SelectedPlane)
+        end)
+
+        Attach:SetFunction(function()
+            return PrecisionAlign.Functions.attach_plane(PrecisionAlign.SelectedPlane, PrecisionAlign.ActiveEnt)
+        end)
+
+        DeleteAll:SetFunction(function()
+            Planes.list_plane:SelectFirstItem()
+            return PrecisionAlign.Functions.delete_planes()
+        end)
+    end
+end
+
+-- Networking
 -- Called when the server sends click data - used to add a new point/line
 local function umsg_click_hook()
-	local point = Vector( net.ReadFloat(), net.ReadFloat(), net.ReadFloat() )
-	local normal = Vector( net.ReadFloat(), net.ReadFloat(), net.ReadFloat() )
-	local ent = net.ReadEntity()
+    local point = Vector(net.ReadFloat(), net.ReadFloat(), net.ReadFloat())
+    local normal = Vector(net.ReadFloat(), net.ReadFloat(), net.ReadFloat())
+    local ent = net.ReadEntity()
 
-	local shift = LocalPlayer():KeyDown( IN_SPEED )
-	local alt = LocalPlayer():KeyDown( IN_WALK )
+    local shift = LocalPlayer():KeyDown(IN_SPEED)
+    local alt = LocalPlayer():KeyDown(IN_WALK)
 
-	local tooltype = tooltypeCvar:GetString()
-	local ToolMode = PrecisionAlign.ToolModes[tooltype]
+    local tooltype = tooltypeCvar:GetString()
+    local ToolMode = PrecisionAlign.ToolModes[tooltype]
 
-	ToolMode:OnClick(ent, point, normal, shift, alt)
+    ToolMode:OnClick(ent, point, normal, shift, alt)
 end
-net.Receive( PA_ .. "click", umsg_click_hook )
+net.Receive(PA_ .. "click", umsg_click_hook)
 
 -- Called when the server sends entity data - so the client knows which entity is selected
 local function umsg_entity_hook()
-	PrecisionAlign.ActiveEnt = net.ReadEntity()
+    PrecisionAlign.ActiveEnt = net.ReadEntity()
 end
-net.Receive( PA_ .. "ent", umsg_entity_hook )
+net.Receive(PA_ .. "ent", umsg_entity_hook)
 
---********************************************************************************************************************--
--- HUD Display
---********************************************************************************************************************--
-
--- Construct draw sizes
-local point_size_min = math.max( sizePointCvar:GetInt(), 1 )
-local point_size_max = sizePointCvar:GetInt() * 1000
-
-local line_size_start = sizeLineStartCvar:GetInt()
-local line_size_min = sizeLineEndCvar:GetInt() -- End (double bar)
-local line_size_max = line_size_min * 1000
-
-local plane_size = sizePlaneCvar:GetInt()
-local plane_size_normal = sizePlaneNormCvar:GetInt()
-local text_min, text_max = 1, 4500
-
-local draw_attachments = LocalPlayer():GetInfo( PA_ .. "draw_attachments" )
-
-cvars.AddChangeCallback( PA_ .. "size_point", function( _, _, New ) point_size_min = tonumber(math.max(New, 1)); point_size_max = tonumber(New) * 1000 end )
-cvars.AddChangeCallback( PA_ .. "size_line_start",  function( _, _, New ) line_size_start = tonumber(New) end  )
-cvars.AddChangeCallback( PA_ .. "size_line_end",  function( _, _, New ) line_size_min = tonumber(New); line_size_max  = line_size_min * 1000 end  )
-cvars.AddChangeCallback( PA_ .. "size_plane", function( _, _, New ) plane_size = tonumber(New) end  )
-cvars.AddChangeCallback( PA_ .. "size_plane_normal", function( _, _, New ) plane_size_normal = tonumber(New) end  )
-
--- Manage attachment line colour changes
-local H = attachHCvar:GetInt()
-local S = attachSCvar:GetInt()
-local V = attachVCvar:GetInt()
-local A = attachACvar:GetInt()
-local attachcolourHSV = { h = H, s = S, v = V, a = A }
-local attachcolourRGB = HSVToColor( H, S, V )
-attachcolourRGB.a = A
-
-local function SetAttachColour(CVar, _, New)
-	if CVar == PA_ .. "attachcolour_h" then
-		attachcolourHSV.h = New
-	elseif CVar == PA_ .. "attachcolour_s" then
-		attachcolourHSV.s = New
-	elseif CVar == PA_ .. "attachcolour_v" then
-		attachcolourHSV.v = New
-	elseif CVar == PA_ .. "attachcolour_a" then
-		attachcolourHSV.a = New
-	end
-
-	attachcolourRGB = HSVToColor( attachcolourHSV.h, attachcolourHSV.s, attachcolourHSV.v )
-	attachcolourRGB.a = attachcolourHSV.a
-end
-
-cvars.AddChangeCallback( PA_ .. "attachcolour_h", SetAttachColour )
-cvars.AddChangeCallback( PA_ .. "attachcolour_s", SetAttachColour )
-cvars.AddChangeCallback( PA_ .. "attachcolour_v", SetAttachColour )
-cvars.AddChangeCallback( PA_ .. "attachcolour_a", SetAttachColour )
-
-
-local function inview( pos2D )
-	if	pos2D.x > -ScrW() and
-		pos2D.y > -ScrH() and
-		pos2D.x < ScrW() * 2 and
-		pos2D.y < ScrH() * 2 then
-			return true
-	end
-	return false
-end
-
--- HUD draw function
-local function precision_align_draw()
-	local playerpos = LocalPlayer():GetShootPos()
-
-	-- Points
-	for k, v in ipairs (PrecisionAlign.Points) do
-		if v.visible and v.origin then
-
-			--Check if point exists
-			local point_temp = PrecisionAlign.Functions.point_global(k)
-			if point_temp then
-				local origin = point_temp.origin
-				local point = origin:ToScreen()
-				if inview( point ) then
-					local distance = playerpos:Distance( origin )
-					local size = math.Clamp( point_size_max / distance, point_size_min, point_size_max )
-					local text_dist = math.Clamp(text_max / distance, text_min, text_max)
-
-					surface.SetDrawColor( pointcolour.r, pointcolour.g, pointcolour.b, pointcolour.a )
-
-					surface.DrawLine( point.x - size, point.y, point.x + size, point.y )
-					surface.DrawLine( point.x, point.y + size, point.x, point.y - size )
-
-					draw.DrawText( tostring(k), "Default", point.x + text_dist, point.y + text_dist / 1.5, Color(pointcolour.r, pointcolour.g, pointcolour.b, pointcolour.a), 0 )
-
-					-- Draw attachment line
-					if draw_attachments and IsValid(v.entity) then
-						local entpos = v.entity:GetPos():ToScreen()
-						surface.SetDrawColor( attachcolourRGB.r, attachcolourRGB.g, attachcolourRGB.b, attachcolourRGB.a )
-						surface.DrawLine( point.x, point.y, entpos.x, entpos.y )
-					end
-				end
-			end
-		end
-	end
-
-	-- Lines
-	for k, v in ipairs (PrecisionAlign.Lines) do
-		if v.visible and v.startpoint and v.endpoint then
-
-			--Check if line exists
-			local line_temp = PrecisionAlign.Functions.line_global(k)
-			if line_temp then
-				local startpoint = line_temp.startpoint
-				local endpoint = line_temp.endpoint
-
-				local line_start = startpoint:ToScreen()
-				local line_end = endpoint:ToScreen()
-
-				local distance1 = playerpos:Distance( startpoint )
-				local distance2 = playerpos:Distance( endpoint )
-
-				local size2 = math.Clamp(line_size_max / distance2, line_size_min, line_size_max)
-				local text_dist = math.Clamp(text_max / distance1, text_min, text_max)
-
-				surface.SetDrawColor( linecolour.r, linecolour.g, linecolour.b, linecolour.a )
-
-				-- Start X
-				local normal = (endpoint - startpoint):GetNormal()
-				local dir1, dir2
-
-				if IsValid(v.entity) then
-					local up = v.entity:GetUp()
-					if normal:Dot(up) < 0.9 then
-						dir1 = (normal:Cross(up)):GetNormal()
-					else
-						dir1 = (normal:Cross(v.entity:GetForward())):GetNormal()
-					end
-				else
-					if math.abs(normal.z) < 0.9 then
-						dir1 = (normal:Cross(Vector(0, 0, 1))):GetNormal()
-					else
-						dir1 = (normal:Cross(Vector(1, 0, 0))):GetNormal()
-					end
-				end
-
-				dir2 = (dir1:Cross(normal)):GetNormal() * line_size_start
-				dir1 = dir1 * line_size_start
-
-				local v1 = (startpoint + dir1 + dir2):ToScreen()
-				local v2 = (startpoint - dir1 + dir2):ToScreen()
-				local v3 = (startpoint - dir1 - dir2):ToScreen()
-				local v4 = (startpoint + dir1 - dir2):ToScreen()
-
-				-- Start X
-				if inview( line_start ) then
-					surface.DrawLine(v1.x, v1.y, v3.x, v3.y)
-					surface.DrawLine(v2.x, v2.y, v4.x, v4.y)
-				end
-
-				-- Line
-				surface.DrawLine( line_start.x, line_start.y, line_end.x, line_end.y )
-
-				-- End =
-				if inview( line_end ) then
-					local line_dir_2D = Vector(line_end.x - line_start.x, line_end.y - line_start.y, 0):GetNormalized()
-					local norm_dir_2D = {x = -line_dir_2D.y, y = line_dir_2D.x}
-					surface.DrawLine( line_end.x - norm_dir_2D.x * size2, line_end.y - norm_dir_2D.y * size2,
-									  line_end.x + norm_dir_2D.x * size2, line_end.y + norm_dir_2D.y * size2 )
-					surface.DrawLine( line_end.x + (line_dir_2D.x / 3 - norm_dir_2D.x) * size2, line_end.y + (line_dir_2D.y / 3 - norm_dir_2D.y) * size2,
-									  line_end.x + (line_dir_2D.x / 3 + norm_dir_2D.x) * size2, line_end.y + (line_dir_2D.y / 3 + norm_dir_2D.y) * size2 )
-				end
-
-				draw.DrawText( tostring(k), "Default", line_start.x + text_dist, line_start.y - text_dist / 1.5 - 15, Color(linecolour.r, linecolour.g, linecolour.b, linecolour.a), 3 )
-
-				-- Draw attachment line
-				if draw_attachments and IsValid(v.entity) then
-					local entpos = v.entity:GetPos():ToScreen()
-					surface.SetDrawColor( attachcolourRGB.r, attachcolourRGB.g, attachcolourRGB.b, attachcolourRGB.a )
-					surface.DrawLine( line_start.x, line_start.y, entpos.x, entpos.y )
-				end
-			end
-		end
-	end
-
-	-- Planes
-	for k, v in ipairs ( PrecisionAlign.Planes ) do
-		if v.visible and v.origin and v.normal then
-
-			-- Check if plane exists
-			local plane_temp = PrecisionAlign.Functions.plane_global(k)
-			if plane_temp then
-
-				local origin = plane_temp.origin
-				local normal = plane_temp.normal
-
-				-- Draw normal line
-				local line_start = origin:ToScreen()
-				if inview( line_start ) then
-
-					local line_end = ( origin + normal * plane_size_normal ):ToScreen()
-
-					local distance = playerpos:Distance( origin )
-					local text_dist = math.Clamp(text_max / distance, text_min, text_max)
-
-					surface.SetDrawColor( planecolour.r, planecolour.g, planecolour.b, planecolour.a )
-					surface.DrawLine( line_start.x, line_start.y, line_end.x, line_end.y )
-
-					-- Draw plane surface
-					local dir1, dir2
-					if IsValid( v.entity ) then
-						local up = v.entity:GetUp()
-						dir1 = math.abs( normal:Dot( up ) ) < 0.9 and up or v.entity:GetForward()
-					else
-						dir1 = math.abs( normal.z ) < 0.9 and Vector( 0, 0, 1 ) or Vector( 1, 0, 0 )
-					end
-
-					dir1 = ( normal:Cross( dir1 ) ):GetNormal()
-					dir2 = ( dir1:Cross( normal ) ):GetNormal() * plane_size
-					dir1 = dir1 * plane_size
-
-					local v1 = ( origin + dir1 + dir2 ):ToScreen()
-					local v2 = ( origin - dir1 + dir2 ):ToScreen()
-					local v3 = ( origin - dir1 - dir2 ):ToScreen()
-					local v4 = ( origin + dir1 - dir2 ):ToScreen()
-
-					surface.DrawLine( v1.x, v1.y, v2.x, v2.y )
-					surface.DrawLine( v2.x, v2.y, v3.x, v3.y )
-					surface.DrawLine( v3.x, v3.y, v4.x, v4.y )
-					surface.DrawLine( v4.x, v4.y, v1.x, v1.y )
-
-					draw.DrawText( tostring( k ), "Default", line_start.x - text_dist, line_start.y + text_dist / 1.5, Color( planecolour.r, planecolour.g, planecolour.b, planecolour.a ), 1 )
-					-- Default
-					-- Draw attachment line
-					if draw_attachments and IsValid(v.entity) then
-						local entpos = v.entity:GetPos():ToScreen()
-						surface.SetDrawColor( attachcolourRGB.r, attachcolourRGB.g, attachcolourRGB.b, attachcolourRGB.a )
-						surface.DrawLine( line_start.x, line_start.y, entpos.x, entpos.y )
-					end
-				end
-			end
-		end
-	end
-end
-hook.Add("HUDPaint", "draw_precision_align", precision_align_draw)
-
-
-local function precision_align_displayhud_func( _, _, args )
-	local enabled = tobool( args[1] )
-	if not enabled then
-		hook.Remove( "HUDPaint", "draw_precision_align" )
-	else
-		hook.Add("HUDPaint", "draw_precision_align", precision_align_draw)
-	end
-	return true
-end
-concommand.Add( PA_ .. "displayhud", precision_align_displayhud_func )
+include("weapons/gmod_tool/stools/" .. PA .. "/draw_hud.lua")

@@ -17,8 +17,14 @@ local delayCvar = CreateConVar( PA_ .. "stack_delay", 0.01 )
 -- Undo
 local function UndoMove( _, ent, pos, ang )
 	if IsValid(ent) then
-		ent:SetPos( pos )
-		ent:SetAngles( ang )
+		local Parent = ent:GetParent()
+		if IsValid(Parent) then
+			ent:SetPos(Parent:WorldToLocal(pos))
+			ent:SetAngles(ang)
+		else
+			ent:SetPos(pos)
+			ent:SetAngles(ang)
+		end
 	end
 end
 
@@ -415,7 +421,7 @@ local function precision_align_move_func( ply, _, args )
 	if not ply.PrecisionAlign_ActiveEnt then return false end
 	local ent = ply.PrecisionAlign_ActiveEnt
 	if not IsValid(ent) then return false end
-	if not util.IsValidPhysicsObject(ent, 0) or IsValid(ent:GetParent()) then return false end
+	if not util.IsValidPhysicsObject(ent, 0) then return false end
 
 	local v = Vector(args[1], args[2], args[3])
 	if v == Vector(0, 0, 0) then return false end
@@ -440,7 +446,12 @@ local function precision_align_move_func( ply, _, args )
 		local pos = ent:GetPos()
 		-- local ang = ent:GetAngles()
 
-		ent:SetPos(pos + v)
+		local Parent = ent:GetParent()
+		if IsValid(Parent) then
+			ent:SetPos(Parent:WorldToLocal(pos + v))
+		else
+			ent:SetPos(pos + v)
+		end
 	end
 	ent:GetPhysicsObject():EnableMotion( false )
 

@@ -15,6 +15,7 @@ local PA = "precision_align"
 local PA_ = PA .. "_"
 
 AddCSLuaFile( PA .. "/ui.lua" )
+AddCSLuaFile( PA .. "/draw_hud.lua" )
 AddCSLuaFile( PA .. "/manipulation_panel.lua" )
 
 -- local typeCvar = GetConVar("precision_align_tooltype")
