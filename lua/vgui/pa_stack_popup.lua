@@ -2,6 +2,11 @@ local STACK_POPUP = {}
 local BGColor_Background = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_BACKGROUND
 local BGColor_Display    = PrecisionAlign.TOOLMODE_BACKGROUND_COLOR_DISPLAY
 
+local PA_ = PrecisionAlign.PA_
+
+local stackNumCvar = GetConVar( PA_ .. "stack_num" )
+local stackNoCollideCvar = GetConVar( PA_ .. "stack_nocollide" )
+
 function STACK_POPUP:Init()
 	self:SetSize( 300, 150 )
 	self:Center()
