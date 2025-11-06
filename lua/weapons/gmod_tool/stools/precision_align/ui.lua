@@ -255,9 +255,8 @@ do
             MoveBtnContainer:Dock(BOTTOM)
             MoveBtnContainer:SetSize(0, 20)
 
-            MoveBtn = MoveBtnContainer:Add("PA_Function_Button")
+            MoveBtn = MoveBtnContainer:Add("PA_Move_Button")
             MoveBtn:SetText("Move Entity")
-            MoveBtn:SetTooltip("Move entity from left selected " .. text .. " -> right selected " .. text)
         end
 
         local Attach_DeleteAll = self:Add("PA_ButtonFlex")
@@ -441,6 +440,7 @@ do
             return PrecisionAlign.Functions.delete_points()
         end)
 
+        MoveEntity:SetTooltip("Move entity by Primary -> Secondary point")
         MoveEntity:SetFunction(function()
             PrecisionAlign.SelectedPoint2 = Points.list_secondarypoint:GetSelectedLine()
             if PrecisionAlign.SelectedPoint == PrecisionAlign.SelectedPoint2 then
@@ -498,7 +498,7 @@ do
     Lines:SetConstructType(PrecisionAlign.CONSTRUCT_LINE)
     Lines.list_line = Lines:SetSelectionMode(false) -- Assignment for backwards compat
     do
-        local View, Delete, Attach, DeleteAll = Lines:AddButtons()
+        local View, Delete, Attach, DeleteAll, MoveEntity = Lines:AddButtons(true)
         View:SetFunction(function()
             if not PrecisionAlign.Functions.construct_exists( PrecisionAlign.CONSTRUCT_LINE, PrecisionAlign.SelectedLine ) then return false end
             local line = PrecisionAlign.Functions.line_global( PrecisionAlign.SelectedLine )
@@ -516,6 +516,21 @@ do
         DeleteAll:SetFunction(function()
             Lines.list_line:SelectFirstItem()
             return PrecisionAlign.Functions.delete_lines()
+        end)
+
+        MoveEntity:SetTooltip("Move entity by line")
+        MoveEntity:SetFunction(function()
+            local line = PrecisionAlign.Functions.line_global(PrecisionAlign.SelectedLine)
+            if not line then
+                Warning("Line not correctly defined")
+                return false
+            end
+
+            local point1 = line.startpoint
+            local point2 = line.endpoint
+            if not PrecisionAlign.Functions.move_entity(point1, point2, PrecisionAlign.ActiveEnt) then return false end
+
+            return true
         end)
     end
 
