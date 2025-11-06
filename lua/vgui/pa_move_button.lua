@@ -39,6 +39,15 @@ end
 
 
 function MOVE_BUTTON:Think()
+	local alt = LocalPlayer():KeyDown( IN_WALK )
+	if alt and not self.OldText then
+		self.OldText = self:GetText()
+		self:SetText("(ALT) Stack Entity")
+	elseif not alt and self.OldText then
+		self:SetText(self.OldText)
+		self.OldText = nil
+	end
+	
 	if IsValid(PrecisionAlign.ActiveEnt) and self:GetDisabled() then
 		self:SetDisabled(false)
 	elseif not IsValid(PrecisionAlign.ActiveEnt) and not self:GetDisabled() then
