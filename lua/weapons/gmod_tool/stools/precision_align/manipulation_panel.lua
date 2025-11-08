@@ -1602,7 +1602,7 @@ function MOVE_TAB:Init()
 			local selection_primary --, selection_1, selection_2, selection_3
 
 			-- Check primary selection
-			if selection_type == "Point" then
+			if selection_type == PrecisionAlign.CONSTRUCT_POINT then
 				local point1, point2 = self.list_point_1:GetSelectedLine(), self.list_point_2:GetSelectedLine()
 				if not point1 then
 					Warning( "Select Point 1" ) return false
@@ -1614,7 +1614,7 @@ function MOVE_TAB:Init()
 					Warning( "Point " .. tostring(point2) .. " not defined" ) return false
 				end
 				selection_primary = { point1, point2 }
-			elseif selection_type == "Line" then
+			elseif selection_type == PrecisionAlign.CONSTRUCT_LINE then
 				local line = self.list_line_1:GetSelectedLine()
 				if not line then
 					Warning( "Select Line 1" ) return false
@@ -1622,7 +1622,7 @@ function MOVE_TAB:Init()
 					Warning( "Line " .. tostring(line) .. " not defined" ) return false
 				end
 				selection_primary = { line }
-			elseif selection_type == "Plane" then
+			elseif selection_type == PrecisionAlign.CONSTRUCT_PLANE then
 				local plane = self.list_plane_1:GetSelectedLine()
 				if not plane then
 					Warning( "Select Plane 1" ) return false
@@ -1669,7 +1669,7 @@ function MOVE_TAB:Init()
 	self.button_move_points = vgui.Create( "PA_Function_Button_3", self )
 		self.button_move_points:SetPos(310, 250)
 		self.button_move_points:SetText( "Move by 2 Points" )
-		self.button_move_points.selections = "Point"
+		self.button_move_points.selections = PrecisionAlign.CONSTRUCT_POINT
 		self.button_move_points.func = function( selection_primary, selection_constructs )
 			local point1 = PrecisionAlign.Functions.point_global( selection_primary[1] )
 			local point2 = PrecisionAlign.Functions.point_global( selection_primary[2] )
@@ -1681,7 +1681,7 @@ function MOVE_TAB:Init()
 	self.button_move_line = vgui.Create( "PA_Function_Button_3", self )
 		self.button_move_line:SetPos(310, 280)
 		self.button_move_line:SetText( "Move by Line" )
-		self.button_move_line.selections = "Line"
+		self.button_move_line.selections = PrecisionAlign.CONSTRUCT_LINE
 		self.button_move_line.func = function( selection_primary, selection_constructs )
 			local line = PrecisionAlign.Functions.line_global( selection_primary[1] )
 
@@ -1692,7 +1692,7 @@ function MOVE_TAB:Init()
 	self.button_move_mirror = vgui.Create( "PA_Function_Button_3", self )
 		self.button_move_mirror:SetPos(310, 310)
 		self.button_move_mirror:SetText( "Mirror Across Plane" )
-		self.button_move_mirror.selections = "Plane"
+		self.button_move_mirror.selections = PrecisionAlign.CONSTRUCT_PLANE
 		self.button_move_mirror.func = function( selection_primary, selection_constructs )
 			local planePrimary = PrecisionAlign.Functions.plane_global( selection_primary[1] )
 			local origin, normal = planePrimary.origin, planePrimary.normal
@@ -1807,7 +1807,8 @@ function FUNCTIONS_TAB:Init()
 	self:CopyBounds( self:GetParent() )
 
 	local width = 148.3
-	local string_table = {"Point", PrecisionAlign.CONSTRUCT_LINE, "Plane"}
+	local string_table = {"Point", "Line", "Plane"}
+	local construct_table = {PrecisionAlign.CONSTRUCT_POINT, PrecisionAlign.CONSTRUCT_LINE, PrecisionAlign.CONSTRUCT_PLANE}
 	local selection_lists = {}
 
 
@@ -1917,9 +1918,9 @@ function FUNCTIONS_TAB:Init()
 			local selection_secondary = {}
 
 			-- Check primary selection
-			if selection_type[1] == "Point" then
+			if selection_type[1] == PrecisionAlign.CONSTRUCT_POINT then
 				selection_primary = self.list_point_primary:GetSelectedLine()
-			elseif selection_type[1] == "Line" then
+			elseif selection_type[1] == PrecisionAlign.CONSTRUCT_LINE then
 				selection_primary = self.list_line_primary:GetSelectedLine()
 			else
 				selection_primary = self.list_plane_primary:GetSelectedLine()
@@ -1949,7 +1950,7 @@ function FUNCTIONS_TAB:Init()
 					-- Check the selections point to valid constructs
 					for _, w in pairs(selection) do
 						local ID = w:GetID()
-						if not PrecisionAlign.Functions.construct_exists( string_table[k], ID ) then
+						if not PrecisionAlign.Functions.construct_exists( construct_table[k], ID ) then
 							Warning( string_table[k] .. " " .. tostring(ID) .. " has not been defined" )
 							return false
 						end
@@ -1971,7 +1972,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_point_linestart:SetPos(15, 250)
 		self.button_point_linestart:SetText( "Line Start Point" )
 		self.button_point_linestart.description = "Sets a point at the start of a line"
-		self.button_point_linestart.selections = { "Point", 0, 1, 0 }
+		self.button_point_linestart.selections = { PrecisionAlign.CONSTRUCT_POINT, 0, 1, 0 }
 		self.button_point_linestart.func = function( selection_primary, selection_secondary )
 			local origin = PrecisionAlign.Functions.line_global( selection_secondary[1] ).startpoint
 			return PrecisionAlign.Functions.set_point( selection_primary, origin )
@@ -1981,7 +1982,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_point_lineend:SetPos(152, 250)
 		self.button_point_lineend:SetText( "Line End Point" )
 		self.button_point_lineend.description = "Sets a point at the end of a line"
-		self.button_point_lineend.selections = { "Point", 0, 1, 0 }
+		self.button_point_lineend.selections = { PrecisionAlign.CONSTRUCT_POINT, 0, 1, 0 }
 		self.button_point_lineend.func = function( selection_primary, selection_secondary )
 			local origin = PrecisionAlign.Functions.line_global( selection_secondary[1] ).endpoint
 			return PrecisionAlign.Functions.set_point( selection_primary, origin )
@@ -1991,7 +1992,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_point_planeorigin:SetPos(15, 280)
 		self.button_point_planeorigin:SetText( "Plane Origin" )
 		self.button_point_planeorigin.description = "Sets a point at the origin of a plane"
-		self.button_point_planeorigin.selections = { "Point", 0, 0, 1 }
+		self.button_point_planeorigin.selections = { PrecisionAlign.CONSTRUCT_POINT, 0, 0, 1 }
 		self.button_point_planeorigin.func = function( selection_primary, selection_secondary )
 			local origin = PrecisionAlign.Functions.plane_global( selection_secondary[1] ).origin
 			return PrecisionAlign.Functions.set_point( selection_primary, origin )
@@ -2001,7 +2002,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_point_threeplanes:SetPos(152, 280)
 		self.button_point_threeplanes:SetText( "Intersection of 3 Planes" )
 		self.button_point_threeplanes.description = "Finds the point where three planes intersect"
-		self.button_point_threeplanes.selections = { "Point", 0, 0, 3 }
+		self.button_point_threeplanes.selections = { PrecisionAlign.CONSTRUCT_POINT, 0, 0, 3 }
 		self.button_point_threeplanes.func = function( selection_primary, selection_secondary )
 			local origin = PrecisionAlign.Functions.point_3plane_intersection( selection_secondary[1], selection_secondary[2], selection_secondary[3] )
 			if origin then
@@ -2014,7 +2015,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_point_twolines:SetPos(15, 310)
 		self.button_point_twolines:SetText( "Line/Line Intersection" )
 		self.button_point_twolines.description = "Sets a point where two lines intersect\n\nIf the two lines do not meet, the point will be set halfway between where the two lines are closest"
-		self.button_point_twolines.selections = { "Point", 0, 2, 0 }
+		self.button_point_twolines.selections = { PrecisionAlign.CONSTRUCT_POINT, 0, 2, 0 }
 		self.button_point_twolines.func = function( selection_primary, selection_secondary )
 			local origin = PrecisionAlign.Functions.point_2line_intersection( selection_secondary[1], selection_secondary[2] )
 			if origin then
@@ -2027,7 +2028,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_point_lineplane:SetPos(152, 310)
 		self.button_point_lineplane:SetText( "Line/Plane Intersection" )
 		self.button_point_lineplane.description = "Sets a point where a line intersects a plane"
-		self.button_point_lineplane.selections = { "Point", 0, 1, 1 }
+		self.button_point_lineplane.selections = { PrecisionAlign.CONSTRUCT_POINT, 0, 1, 1 }
 		self.button_point_lineplane.func = function( selection_primary, selection_secondary )
 			local origin = PrecisionAlign.Functions.point_lineplane_intersection( selection_secondary[1], selection_secondary[2] )
 			if origin then
@@ -2040,7 +2041,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_point_lineprojection:SetPos(15, 340)
 		self.button_point_lineprojection:SetText( "Point - Line Projection" )
 		self.button_point_lineprojection.description = "Finds the point on a line closest to the selected point"
-		self.button_point_lineprojection.selections = { "Point", 1, 1, 0 }
+		self.button_point_lineprojection.selections = { PrecisionAlign.CONSTRUCT_POINT, 1, 1, 0 }
 		self.button_point_lineprojection.func = function( selection_primary, selection_secondary )
 			local origin = PrecisionAlign.Functions.point_line_projection( selection_secondary[1], selection_secondary[2] )
 			if origin then
@@ -2053,7 +2054,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_point_planeprojection:SetPos(152, 340)
 		self.button_point_planeprojection:SetText( "Point - Plane Projection" )
 		self.button_point_planeprojection.description = "Finds the point on a plane closest to the selected point"
-		self.button_point_planeprojection.selections = { "Point", 1, 0, 1 }
+		self.button_point_planeprojection.selections = { PrecisionAlign.CONSTRUCT_POINT, 1, 0, 1 }
 		self.button_point_planeprojection.func = function( selection_primary, selection_secondary )
 			local origin = PrecisionAlign.Functions.point_plane_projection( selection_secondary[1], selection_secondary[2] )
 			if origin then
@@ -2068,7 +2069,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_line_point_startpoint:SetPos(width * 2 + 15, 250)
 		self.button_line_point_startpoint:SetText( "Startpoint from Point" )
 		self.button_line_point_startpoint.description = "Sets the startpoint of a line at selected point"
-		self.button_line_point_startpoint.selections = { "Line", 1, 0, 0 }
+		self.button_line_point_startpoint.selections = { PrecisionAlign.CONSTRUCT_LINE, 1, 0, 0 }
 		self.button_line_point_startpoint.func = function( selection_primary, selection_secondary )
 			local startpoint = PrecisionAlign.Functions.point_global( selection_secondary[1] ).origin
 			return PrecisionAlign.Functions.set_line( selection_primary, startpoint )
@@ -2078,7 +2079,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_line_point_endpoint:SetPos(width * 2 + 152, 250)
 		self.button_line_point_endpoint:SetText( "Endpoint from Point" )
 		self.button_line_point_endpoint.description = "Sets the endpoint of a line at the selected point"
-		self.button_line_point_endpoint.selections = { "Line", 1, 0, 0 }
+		self.button_line_point_endpoint.selections = { PrecisionAlign.CONSTRUCT_LINE, 1, 0, 0 }
 		self.button_line_point_endpoint.func = function( selection_primary, selection_secondary )
 			local endpoint = PrecisionAlign.Functions.point_global( selection_secondary[1] ).origin
 			return PrecisionAlign.Functions.set_line( selection_primary, nil, endpoint )
@@ -2088,7 +2089,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_line_move_startpoint:SetPos(width * 2 + 15, 280)
 		self.button_line_move_startpoint:SetText( "Move Line to Point" )
 		self.button_line_move_startpoint.description = "Position an existing line so that its start point moved to the selected point. This will maintain the direction and length of the line"
-		self.button_line_move_startpoint.selections = { "Line", 1, 0, 0 }
+		self.button_line_move_startpoint.selections = { PrecisionAlign.CONSTRUCT_LINE, 1, 0, 0 }
 		self.button_line_move_startpoint.func = function( selection_primary, selection_secondary )
 			local origin = PrecisionAlign.Functions.point_global( selection_secondary[1] ).origin
 
@@ -2107,7 +2108,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_line_2points:SetPos(width * 2 + 152, 280)
 		self.button_line_2points:SetText( "Line from 2 Points" )
 		self.button_line_2points.description = "Sets a line with start/end determined by the two selected points"
-		self.button_line_2points.selections = { "Line", 2, 0, 0 }
+		self.button_line_2points.selections = { PrecisionAlign.CONSTRUCT_LINE, 2, 0, 0 }
 		self.button_line_2points.func = function( selection_primary, selection_secondary )
 			local startpoint = PrecisionAlign.Functions.point_global( selection_secondary[1] ).origin
 			local endpoint = PrecisionAlign.Functions.point_global( selection_secondary[2] ).origin
@@ -2118,7 +2119,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_line_2planes:SetPos(width * 2 + 15, 310)
 		self.button_line_2planes:SetText( "Intersection of 2 Planes" )
 		self.button_line_2planes.description = "Sets a line at the intersection of two planes\n\nThe start point will be set halfway between the plane origins"
-		self.button_line_2planes.selections = { "Line", 0, 0, 2 }
+		self.button_line_2planes.selections = { PrecisionAlign.CONSTRUCT_LINE, 0, 0, 2 }
 		self.button_line_2planes.func = function( selection_primary, selection_secondary )
 			local line = PrecisionAlign.Functions.line_2plane_intersection( selection_secondary[1], selection_secondary[2] )
 			if line then
@@ -2131,7 +2132,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_line_plane:SetPos(width * 2 + 152, 310)
 		self.button_line_plane:SetText( "Line from Plane" )
 		self.button_line_plane.description = "Sets a line with startpoint/direction determined by the selected plane"
-		self.button_line_plane.selections = { "Line", 0, 0, 1 }
+		self.button_line_plane.selections = { PrecisionAlign.CONSTRUCT_LINE, 0, 0, 1 }
 		self.button_line_plane.func = function( selection_primary, selection_secondary )
 			local plane = PrecisionAlign.Functions.plane_global( selection_secondary[1] )
 			return PrecisionAlign.Functions.set_line( selection_primary, plane.origin, nil, plane.normal )
@@ -2141,7 +2142,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_line_plane_direction:SetPos(width * 2 + 15, 340)
 		self.button_line_plane_direction:SetText( "Direction from Plane" )
 		self.button_line_plane_direction.description = "Sets a line's direction determined by the direction of the selected plane"
-		self.button_line_plane_direction.selections = { "Line", 0, 0, 1 }
+		self.button_line_plane_direction.selections = { PrecisionAlign.CONSTRUCT_LINE, 0, 0, 1 }
 		self.button_line_plane_direction.func = function( selection_primary, selection_secondary )
 			local plane = PrecisionAlign.Functions.plane_global( selection_secondary[1] )
 			return PrecisionAlign.Functions.set_line( selection_primary, nil, nil, plane.normal )
@@ -2151,7 +2152,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_line_plane_projection:SetPos(width * 2 + 152, 340)
 		self.button_line_plane_projection:SetText( "Line - Plane Projection" )
 		self.button_line_plane_projection.description = "Finds the projection of a line on a plane"
-		self.button_line_plane_projection.selections = { "Line", 0, 1, 1 }
+		self.button_line_plane_projection.selections = { PrecisionAlign.CONSTRUCT_LINE, 0, 1, 1 }
 		self.button_line_plane_projection.func = function( selection_primary, selection_secondary )
 			local line = PrecisionAlign.Functions.line_plane_projection( selection_secondary[1], selection_secondary[2] )
 			if line then
@@ -2166,7 +2167,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_plane_point_origin:SetPos(width * 4 + 15, 250)
 		self.button_plane_point_origin:SetText( "Origin from Point" )
 		self.button_plane_point_origin.description = "Sets a plane's origin at the selected point"
-		self.button_plane_point_origin.selections = { "Plane", 1, 0, 0 }
+		self.button_plane_point_origin.selections = { PrecisionAlign.CONSTRUCT_PLANE, 1, 0, 0 }
 		self.button_plane_point_origin.func = function( selection_primary, selection_secondary )
 			local origin = PrecisionAlign.Functions.point_global( selection_secondary[1] ).origin
 			return PrecisionAlign.Functions.set_plane( selection_primary, origin )
@@ -2176,7 +2177,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_plane_3points:SetPos(width * 4 + 152, 250)
 		self.button_plane_3points:SetText( "Plane from 3 Points" )
 		self.button_plane_3points.description = "Sets a plane determined by the 3 selected points\n\nThe plane's origin will be set at the centre of the 3 points"
-		self.button_plane_3points.selections = { "Plane", 3, 0, 0 }
+		self.button_plane_3points.selections = { PrecisionAlign.CONSTRUCT_PLANE, 3, 0, 0 }
 		self.button_plane_3points.func = function( selection_primary, selection_secondary )
 			local plane_temp = PrecisionAlign.Functions.plane_3points( selection_secondary[1], selection_secondary[2], selection_secondary[3] )
 			if plane_temp then
@@ -2189,7 +2190,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_plane_line:SetPos(width * 4 + 15, 280)
 		self.button_plane_line:SetText( "Plane from Line" )
 		self.button_plane_line.description = "Sets a plane with origin/direction determined by the selected line"
-		self.button_plane_line.selections = { "Plane", 0, 1, 0 }
+		self.button_plane_line.selections = { PrecisionAlign.CONSTRUCT_PLANE, 0, 1, 0 }
 		self.button_plane_line.func = function( selection_primary, selection_secondary )
 			local line = PrecisionAlign.Functions.line_global( selection_secondary[1] )
 			local direction = (line.endpoint - line.startpoint):GetNormal()
@@ -2200,7 +2201,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_plane_line_direction:SetPos(width * 4 + 152, 280)
 		self.button_plane_line_direction:SetText( "Direction from Line" )
 		self.button_plane_line_direction.description = "Sets a plane's direction determined by the direction of the selected line"
-		self.button_plane_line_direction.selections = { "Plane", 0, 1, 0 }
+		self.button_plane_line_direction.selections = { PrecisionAlign.CONSTRUCT_PLANE, 0, 1, 0 }
 		self.button_plane_line_direction.func = function( selection_primary, selection_secondary )
 			local line = PrecisionAlign.Functions.line_global( selection_secondary[1] )
 			local direction = (line.endpoint - line.startpoint):GetNormal()
@@ -2211,7 +2212,7 @@ function FUNCTIONS_TAB:Init()
 		self.button_plane_2lines:SetPos(width * 4 + 15, 310)
 		self.button_plane_2lines:SetText( "Plane from 2 Lines" )
 		self.button_plane_2lines.description = "Sets a plane determined by the 2 selected lines\n\nThe plane's origin will be set halfway between the line startpoints"
-		self.button_plane_2lines.selections = { "Plane", 0, 2, 0 }
+		self.button_plane_2lines.selections = { PrecisionAlign.CONSTRUCT_PLANE, 0, 2, 0 }
 		self.button_plane_2lines.func = function( selection_primary, selection_secondary )
 			local direction = PrecisionAlign.Functions.line_function_perpendicular( selection_secondary[1], selection_secondary[2] )
 			if not direction then return false end
