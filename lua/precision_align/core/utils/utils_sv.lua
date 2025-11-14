@@ -538,7 +538,7 @@ local function precision_align_rotate_func( ply, _, args )
 	if not ply.PrecisionAlign_ActiveEnt then return false end
 	local ent = ply.PrecisionAlign_ActiveEnt
 	if not IsValid(ent) then return false end
-	if not util.IsValidPhysicsObject(ent, 0) or IsValid(ent:GetParent()) then return false end
+	if not util.IsValidPhysicsObject(ent, 0) then return false end
 
 	if not tonumber(args[1]) or not tonumber(args[2]) or not tonumber(args[3]) then
 		return false
@@ -616,10 +616,14 @@ local function precision_align_rotate_func( ply, _, args )
 			if v == pos then
 				ent:SetAngles( ent:LocalToWorldAngles( a ) )
 			else
-				localv = ent:WorldToLocal(v)
+				local Parent = ent:GetParent()
 				ent:SetAngles( ent:LocalToWorldAngles( a ) )
-				pos = pos + ( v - ent:LocalToWorld(localv) )
-				ent:SetPos(pos)
+				pos = pos + (v - ent:LocalToWorld(localv))
+				if IsValid(Parent) then
+					ent:SetPos(Parent:WorldToLocal(pos))
+				else
+					ent:SetPos(pos)
+				end
 			end
 		end
 	end
