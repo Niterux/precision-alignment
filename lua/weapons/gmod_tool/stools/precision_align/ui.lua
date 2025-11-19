@@ -132,7 +132,6 @@ do
             DrawColor = self.DrawColor
         end
 
-        surface.SetDrawColor(DrawColor)
         self:GetSkin().tex.Button(0, 0, width, height, DrawColor)
 
         draw.SimpleText(self.ToolMode or "UNKNOWN", "DermaDefault", 4, height / 2, TextColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
