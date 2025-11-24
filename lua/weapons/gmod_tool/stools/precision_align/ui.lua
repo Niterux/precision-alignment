@@ -372,8 +372,8 @@ do
     EnableConstructDisplays:SetValue(1)
     EnableConstructDisplays:SetTooltip("Show/Hide all constructs")
     EnableConstructDisplays:DockMargin(0, 0, 0, 4)
-    function EnableConstructDisplays:OnChange()
-        LocalPlayer():ConCommand(PA_ .. "displayhud")
+    function EnableConstructDisplays:OnChange(checked)
+        LocalPlayer():ConCommand(PA_ .. "displayhud " .. (checked and "1" or "0"))
     end
 
     local SnapToEdges = Checkboxes:Add("DCheckBoxLabel")
