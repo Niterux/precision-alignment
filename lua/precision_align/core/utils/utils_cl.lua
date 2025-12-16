@@ -28,8 +28,8 @@ for i = 1, 9 do
 	PrecisionAlign.Planes[i] = {visible = true}
 end
 
-local stackCvar = CreateClientConVar(PA_ .. "stack_num", "1", true, false, _, 1, 20)
-local lengthCvar = CreateClientConVar(PA_ .. "default_linelength", "200", true, false, _, 0.001)
+local stackCvar = CreateClientConVar(PA_ .. "stack_num", "1", true, false, "", 1, 20)
+local lengthCvar = CreateClientConVar(PA_ .. "default_linelength", "200", true, false, "", 0.001)
 
 --********************************************************************************************************************--
 -- Global  Functions
