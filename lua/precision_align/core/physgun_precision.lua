@@ -4,7 +4,7 @@ if SERVER then
     end
 
     hook.Add("OnPhysgunFreeze", "PA_FixPhysgunRotationInaccuracy", function(_, PhysObj, _, Player)
-        if not Player:KeyDown(IN_SPEED) then return end
+        if not Player:KeyDown(IN_SPEED) or not PhysObj:IsValid() then return end
         local ShouldSnap = Player:GetInfo("precision_align_snap_physgun")
         if ShouldSnap == 0 then return end
 
