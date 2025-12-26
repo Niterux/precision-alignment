@@ -47,7 +47,7 @@ function MOVE_BUTTON:Think()
 		self:SetText(self.OldText)
 		self.OldText = nil
 	end
-	
+
 	if IsValid(PrecisionAlign.ActiveEnt) and self:GetDisabled() then
 		self:SetDisabled(false)
 	elseif not IsValid(PrecisionAlign.ActiveEnt) and not self:GetDisabled() then
