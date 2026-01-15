@@ -73,13 +73,13 @@ local function precision_align_open_panel_func(visible)
 end
 concommand.Add( PA_ .. "open_panel", precision_align_open_panel_func )
 
-// Open a particular tab in the manipulation panel
+-- Open a particular tab in the manipulation panel
 local function Open_Manipulation_Tab( Tab )
     precision_align_open_panel_func(true)
 	PA_manipulation_panel.panel:SetActiveTab( Tab )
 end
 
-// Perform double click function on a listview within the manipulation panel
+-- Perform double click function on a listview within the manipulation panel
 local function Listview_DoDoubleClick( panel, LineID )
 		panel:ClearSelection()
 		
