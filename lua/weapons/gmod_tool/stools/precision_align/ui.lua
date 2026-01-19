@@ -495,7 +495,10 @@ do
     CPanel.line_window = Lines
     CPanel:AddItem(Lines)
     Lines:SetConstructType(PrecisionAlign.CONSTRUCT_LINE)
-    Lines.list_line = Lines:SetSelectionMode(false) -- Assignment for backwards compat
+    local function SelectLine(ID) PrecisionAlign.SelectedLine = ID end
+    local function SelectLine2() end
+    local function LineDbClick() end
+    Lines.list_line = Lines:SetSelectionMode(SelectLine, LineDbClick, SelectLine2, LineDbClick) -- Assignment for backwards compat
     do
         local View, Delete, Attach, DeleteAll, MoveEntity = Lines:AddButtons(true)
         View:SetFunction(function()
@@ -537,7 +540,10 @@ do
     CPanel.plane_window = Planes
     CPanel:AddItem(Planes)
     Planes:SetConstructType(PrecisionAlign.CONSTRUCT_PLANE)
-    Planes.list_plane = Planes:SetSelectionMode(false) -- Assignment for backwards compat
+    local function SelectPlane(ID) PrecisionAlign.SelectedPlane = ID end
+    local function SelectPlane2() end
+    local function PlaneDbClick() end
+    Planes.list_plane = Planes:SetSelectionMode(SelectPlane, PlaneDbClick, SelectPlane2, PlaneDbClick) -- Assignment for backwards compat
     do
         local View, Delete, Attach, DeleteAll = Planes:AddButtons()
 
