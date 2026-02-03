@@ -277,6 +277,7 @@ function TOOL:GetClickPosition(trace)
 			PrecisionAlign.SetNextMessageTarget(self:GetOwner())
 			PrecisionAlign.Warning("Phys:GetAABB(): BoxMin and/or BoxMax returned nil. Please report this error, alongside as many details as possible about the entity you ran this on.")
 			PrecisionAlign.SetNextMessageTarget()
+			ErrorNoHalt("Phys:GetAABB(): BoxMin and/or BoxMax returned nil. Trace entity: " .. tostring(Ent) .. ", trace physics: " .. tostring(trace.PhysicsBone) .. "(resolved to " .. tostring(Phys) .. ")")
 		else
 			local HitPosL = Ent:WorldToLocal( trace.HitPos )
 			local BoxCentre = Ent:OBBCenter()
