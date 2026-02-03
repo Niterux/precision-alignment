@@ -271,69 +271,76 @@ function TOOL:GetClickPosition(trace)
 	if not IsValid(Phys) or not IsValid(Ent) or Ent:IsWorld() then
 		Pos = trace.HitPos
 	elseif Edge_Snap or Centre_Snap then
-		local HitPosL = Ent:WorldToLocal( trace.HitPos )
 		local BoxMin, BoxMax = Phys:GetAABB()
-		local BoxCentre = Ent:OBBCenter()
+		if not BoxMin or not BoxMax then
+			Pos = trace.HitPos
+			PrecisionAlign.SetNextMessageTarget(self:GetOwner())
+			PrecisionAlign.Warning("Phys:GetAABB(): BoxMin and/or BoxMax returned nil. Please report this error, alongside as many details as possible about the entity you ran this on.")
+			PrecisionAlign.SetNextMessageTarget()
+		else
+			local HitPosL = Ent:WorldToLocal( trace.HitPos )
+			local BoxCentre = Ent:OBBCenter()
 
-		local NewPosL = Vector( HitPosL.x, HitPosL.y, HitPosL.z )
+			local NewPosL = Vector( HitPosL.x, HitPosL.y, HitPosL.z )
 
-		local EdgePosL, Edge_Dist
-		local CentrePosL, Centre_Dist
+			local EdgePosL, Edge_Dist
+			local CentrePosL, Centre_Dist
 
-		-- These keep track of whether the point is being snapped to an edge or centre line
-		local Snapped_Edges = {}
-		local Snapped_Centres = {}
+			-- These keep track of whether the point is being snapped to an edge or centre line
+			local Snapped_Edges = {}
+			local Snapped_Centres = {}
 
-		-- Calculate local position of nearest edge
-		if Edge_Snap then
-			EdgePosL, Snapped_Edges = Nearest_Edge( HitPosL, BoxMin, BoxMax, BoxCentre, Snap_Dist )
-			NewPosL = EdgePosL
+			-- Calculate local position of nearest edge
+			if Edge_Snap then
+				EdgePosL, Snapped_Edges = Nearest_Edge( HitPosL, BoxMin, BoxMax, BoxCentre, Snap_Dist )
+				NewPosL = EdgePosL
 
-		-- We need at least some edge snap if using Centre_Snap, else NewPosL will snap away from the surface being clicked on
-		elseif Centre_Snap then
-			EdgePosL, Snapped_Edges = Nearest_Edge( HitPosL, BoxMin, BoxMax, BoxCentre, 0.1 )
-			NewPosL = EdgePosL
+			-- We need at least some edge snap if using Centre_Snap, else NewPosL will snap away from the surface being clicked on
+			elseif Centre_Snap then
+				EdgePosL, Snapped_Edges = Nearest_Edge( HitPosL, BoxMin, BoxMax, BoxCentre, 0.1 )
+				NewPosL = EdgePosL
+			end
+
+			-- Calculate local position of nearest centre line
+			if Centre_Snap then
+				CentrePosL = Vector( HitPosL.x, HitPosL.y, HitPosL.z )
+
+				if math.abs( CentrePosL.x - BoxCentre.x ) < Snap_Dist then
+					CentrePosL.x = BoxCentre.x
+					Snapped_Centres.x = true
+				end
+
+				if math.abs( CentrePosL.y - BoxCentre.y ) < Snap_Dist then
+					CentrePosL.y = BoxCentre.y
+					Snapped_Centres.y = true
+				end
+
+				if math.abs( CentrePosL.z - BoxCentre.z ) < Snap_Dist then
+					CentrePosL.z = BoxCentre.z
+					Snapped_Centres.z = true
+				end
+
+				NewPosL = CentrePosL
+
+				Edge_Dist = EdgePosL - HitPosL
+				Centre_Dist = CentrePosL - HitPosL
+
+				-- NewPosL is already equal to CentrePosL, so only need to set cases where EdgePosL is smaller
+				if ( math.abs( Edge_Dist.x ) < math.abs( Centre_Dist.x ) and Snapped_Edges.x ) or not Snapped_Centres.x then
+					NewPosL.x = EdgePosL.x
+				end
+
+				if ( math.abs( Edge_Dist.y ) < math.abs( Centre_Dist.y ) and Snapped_Edges.y ) or not Snapped_Centres.y  then
+					NewPosL.y = EdgePosL.y
+				end
+
+				if ( math.abs( Edge_Dist.z ) < math.abs( Centre_Dist.z ) and Snapped_Edges.z ) or not Snapped_Centres.z  then
+					NewPosL.z = EdgePosL.z
+				end
+			end
+
+			Pos = Ent:LocalToWorld(NewPosL)
 		end
-
-		-- Calculate local position of nearest centre line
-		if Centre_Snap then
-			CentrePosL = Vector( HitPosL.x, HitPosL.y, HitPosL.z )
-
-			if math.abs( CentrePosL.x - BoxCentre.x ) < Snap_Dist then
-				CentrePosL.x = BoxCentre.x
-				Snapped_Centres.x = true
-			end
-
-			if math.abs( CentrePosL.y - BoxCentre.y ) < Snap_Dist then
-				CentrePosL.y = BoxCentre.y
-				Snapped_Centres.y = true
-			end
-
-			if math.abs( CentrePosL.z - BoxCentre.z ) < Snap_Dist then
-				CentrePosL.z = BoxCentre.z
-				Snapped_Centres.z = true
-			end
-
-			NewPosL = CentrePosL
-
-			Edge_Dist = EdgePosL - HitPosL
-			Centre_Dist = CentrePosL - HitPosL
-
-			-- NewPosL is already equal to CentrePosL, so only need to set cases where EdgePosL is smaller
-			if ( math.abs( Edge_Dist.x ) < math.abs( Centre_Dist.x ) and Snapped_Edges.x ) or not Snapped_Centres.x then
-				NewPosL.x = EdgePosL.x
-			end
-
-			if ( math.abs( Edge_Dist.y ) < math.abs( Centre_Dist.y ) and Snapped_Edges.y ) or not Snapped_Centres.y  then
-				NewPosL.y = EdgePosL.y
-			end
-
-			if ( math.abs( Edge_Dist.z ) < math.abs( Centre_Dist.z ) and Snapped_Edges.z ) or not Snapped_Centres.z  then
-				NewPosL.z = EdgePosL.z
-			end
-		end
-
-		Pos = Ent:LocalToWorld(NewPosL)
 	else
 		Pos = trace.HitPos
 	end
