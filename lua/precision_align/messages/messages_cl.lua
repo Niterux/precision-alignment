@@ -1,6 +1,6 @@
 local PA_ = PrecisionAlign.PA_
-local ShowMessages = CreateClientConVar(PA_ .. "display_messages", "0", true, false, _, 0, 1)
-local ShowWarns    = CreateClientConVar(PA_ .. "display_warnings", "1", true, false, _, 0, 1)
+local ShowMessages = CreateClientConVar(PA_ .. "display_messages", "0", true, false, nil, 0, 1)
+local ShowWarns    = CreateClientConVar(PA_ .. "display_warnings", "1", true, false, nil, 0, 1)
 
 if PrecisionAlign.MessageQueue then
     while PrecisionAlign.MessageQueue:CanDequeue() do
